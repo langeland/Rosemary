@@ -1,0 +1,20 @@
+
+locations:
+  document_root: /Users/langeland/temp/vanilla-test/document_root/
+  flow_dir: flow/
+  apache_sites: /Users/langeland/temp/vanilla-test/apache_sites/
+
+database_root:
+  host: localhost
+  username: root
+
+permissions:
+  file_modes: 766
+  owner: vagrant
+  group: www-data
+
+database:
+  host: localhost
+  database: typo3_%s
+  username: typo3
+  password: joh316
