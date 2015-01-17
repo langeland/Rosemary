@@ -189,7 +189,7 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 			'      backendOptions:',
 			'        driver: pdo_mysql',
 			'        host: ' . $this->configuration['database']['host'],
-			'        dbname: ' . strtolower($this->installationName),
+			'        dbname: ' . sprintf($this->configuration['database']['database'], strtolower($this->installationName)),
 			'        user: ' . $this->configuration['database']['username'],
 			'        password: ' . $this->configuration['database']['password'],
 		);
