@@ -164,7 +164,7 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 				$this->configuration['database_root']['username'],
 				($this->configuration['database_root']['password'] != '') ? '-p' . $this->configuration['database_root']['password'] : '',
 				strtolower($this->installationName),
-				strtolower($this->installationName)
+				sprintf($this->configuration['database']['database'], strtolower($this->installationName))
 			)
 		));
 	}
