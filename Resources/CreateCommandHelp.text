@@ -1,0 +1,9 @@
+This is the helt text
+
+Example:
+
+From Packagist
+  <info>rosemary create neos typo3/flow-base-distribution</info>
+
+From Git
+  <info>rosemary create neos git@github.com:langeland/neos-base-distribution.git</info>

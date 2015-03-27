@@ -22,7 +22,6 @@ class EnvironmentSetupCommand extends \Rosemary\Command\AbstractCommand {
 		$this->input = $input;
 		$this->output = $output;
 
-
 		print_r($this->configuration);
 
 

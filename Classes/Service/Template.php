@@ -25,7 +25,8 @@ class Template {
 	}
 
 	public function render() {
-		return $this->replaceAll();
+		$this->replaceAll();
+		return $this->template;
 	}
 
 	private function replaceAll() {

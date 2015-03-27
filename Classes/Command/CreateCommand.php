@@ -18,6 +18,7 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 		$this
 			->setName('create')
 			->setDescription('Create blank project')
+			->setHelp(file_get_contents(ROOT_DIR . '/Resources/CreateCommandHelp.text'))
 			->addArgument('name', \Symfony\Component\Console\Input\InputArgument::REQUIRED, 'Set the name of the installation')
 			->addArgument('source', \Symfony\Component\Console\Input\InputArgument::REQUIRED, 'Set the source fof the installation. Can be a packagist package "vendor/package" or a git reposirory "git@github.com:user/vendor-package.git"');
 	}
@@ -40,8 +41,8 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 			$this->task_updateSettings();
 			$this->task_setfilepermissions();
 			$this->task_createVhost();
-		} catch (Exception $e) {
-
+		} catch (\Exception $e) {
+			die('It all stops here: ' . $e->getMessage());
 		}
 	}
 	/*******************************************************************************************************************
@@ -178,7 +179,7 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 		$settingsYamlTemplate->setVar('dbname', sprintf($this->configuration['database']['database'], strtolower($this->installationName)));
 		$fileContent = $settingsYamlTemplate->render();
 
-		file_put_contents($this->configuration['locations']['document_root'] . $this->installationName . '/' . $this->configuration['locations']['flow_dir'] . 'Configuration/Settings.yaml', implode("\n", $fileContent));
+		file_put_contents($this->configuration['locations']['document_root'] . $this->installationName . '/' . $this->configuration['locations']['flow_dir'] . 'Configuration/Settings.yaml', $fileContent);
 	}
 
 	private function task_setfilepermissions() {
@@ -212,7 +213,7 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 		$virtualHostTemplate->setVar('flowDir', $this->configuration['locations']['flow_dir']);
 		$fileContent = $virtualHostTemplate->render();
 
-		file_put_contents($this->configuration['locations']['apache_sites'] . '/20-' . strtolower($this->installationName) . '.conf', implode("\n", $fileContent));
+		file_put_contents($this->configuration['locations']['apache_sites'] . '/20-' . strtolower($this->installationName) . '.conf', $fileContent);
 
 	}
 

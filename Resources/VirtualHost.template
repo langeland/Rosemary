@@ -10,7 +10,10 @@
 		Allow from all
 	</Directory>
 
-	## Load additional static includes
+	<FilesMatch "\.php$">
+		Require all granted
+		SetHandler proxy:fcgi://127.0.0.1:9000
+	</FilesMatch>
 
 	## Logging
 	ErrorLog "{documentRoot}{installationName}/logs/error.log"
