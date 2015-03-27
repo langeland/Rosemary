@@ -7,6 +7,7 @@ locations:
 database_root:
   host: localhost
   username: root
+  password: vagrant
 
 permissions:
   file_modes: 766
@@ -15,6 +16,6 @@ permissions:
 
 database:
   host: localhost
-  database: typo3_%s
   username: typo3
   password: joh316
+  database: typo3_%s

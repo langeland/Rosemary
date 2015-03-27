@@ -1,0 +1,19 @@
+<VirtualHost *:80>
+	ServerName {installationName}.dev
+
+	## Vhost docroot
+	DocumentRoot "{documentRoot}{installationName}/{flowDir}/Web"
+
+	<Directory "{documentRoot}{installationName}/{flowDir}/Web">
+		AllowOverride All
+		Order allow,deny
+		Allow from all
+	</Directory>
+
+	## Load additional static includes
+
+	## Logging
+	ErrorLog "{documentRoot}{installationName}/logs/error.log"
+	ServerSignature Off
+	CustomLog "{documentRoot}{installationName}/logs/access.log" combined
+</VirtualHost>

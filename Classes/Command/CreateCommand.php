@@ -2,7 +2,6 @@
 
 namespace Rosemary\Command;
 
-
 class CreateCommand extends \Rosemary\Command\AbstractCommand {
 
 	private $installationName = NULL;
@@ -171,30 +170,15 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 
 	private function task_updateSettings() {
 		$this->outputLine('Updating Configuration/Settings.yaml');
-		$fileContent = array(
-			'#                                                                        #',
-			'# Example Settings                                                       #',
-			'#                                                                        #',
-			'# This file contains settings for various parts of the application.      #',
-			'# Copy this file to Settings.yaml, and adjust as necessary.              #',
-			'#                                                                        #',
-			'# Please refer to the default settings file(s) or the manuals for        #',
-			'# possible configuration options.                                        #',
-			'#                                                                        #',
-			'',
-			'',
-			'TYPO3:',
-			'  FLOW3:',
-			'    persistence:',
-			'      backendOptions:',
-			'        driver: pdo_mysql',
-			'        host: ' . $this->configuration['database']['host'],
-			'        dbname: ' . sprintf($this->configuration['database']['database'], strtolower($this->installationName)),
-			'        user: ' . $this->configuration['database']['username'],
-			'        password: ' . $this->configuration['database']['password'],
-		);
-		file_put_contents($this->configuration['locations']['document_root'] . $this->installationName . '/' . $this->configuration['locations']['flow_dir'] . 'Configuration/Settings.yaml', implode("\n", $fileContent));
 
+		$settingsYamlTemplate = new \Rosemary\Service\Template(\Rosemary\Utility\General::getResourcePathAndName('SettingsYaml.template'));
+		$settingsYamlTemplate->setVar('host', $this->configuration['database']['host']);
+		$settingsYamlTemplate->setVar('user', $this->configuration['database']['username']);
+		$settingsYamlTemplate->setVar('password', $this->configuration['database']['password']);
+		$settingsYamlTemplate->setVar('dbname', sprintf($this->configuration['database']['database'], strtolower($this->installationName)));
+		$fileContent = $settingsYamlTemplate->render();
+
+		file_put_contents($this->configuration['locations']['document_root'] . $this->installationName . '/' . $this->configuration['locations']['flow_dir'] . 'Configuration/Settings.yaml', implode("\n", $fileContent));
 	}
 
 	private function task_setfilepermissions() {
@@ -222,27 +206,11 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 	private function task_createVhost() {
 		$this->outputLine('Creating virtual host: "%s"', array($this->configuration['locations']['apache_sites'] . '20-' . strtolower($this->installationName) . '.conf'));
 
-		$fileContent = array(
-			'<VirtualHost *:8081>',
-			'  ServerName ' . strtolower($this->installationName) . '.dev',
-			'',
-			'  ## Vhost docroot',
-			'  DocumentRoot "' . $this->configuration['locations']['document_root'] . $this->installationName . '/' . $this->configuration['locations']['flow_dir'] . '/Web"',
-			'',
-			'  <Directory "' . $this->configuration['locations']['document_root'] . $this->installationName . '/' . $this->configuration['locations']['flow_dir'] . '/Web">',
-			'    AllowOverride All',
-			'    Order allow,deny',
-			'    Allow from all',
-			'  </Directory>',
-			'',
-			'  ## Load additional static includes',
-			'',
-			'  ## Logging',
-			'  ErrorLog "' . $this->configuration['locations']['document_root'] . $this->installationName . '/logs/error.log"',
-			'  ServerSignature Off',
-			'  CustomLog "' . $this->configuration['locations']['document_root'] . $this->installationName . '/logs/access.log" combined',
-			'</VirtualHost>'
-		);
+		$virtualHostTemplate = new \Rosemary\Service\Template(\Rosemary\Utility\General::getResourcePathAndName('VirtualHost.template'));
+		$virtualHostTemplate->setVar('installationName', strtolower($this->installationName));
+		$virtualHostTemplate->setVar('documentRoot', $this->configuration['locations']['document_root']);
+		$virtualHostTemplate->setVar('flowDir', $this->configuration['locations']['flow_dir']);
+		$fileContent = $virtualHostTemplate->render();
 
 		file_put_contents($this->configuration['locations']['apache_sites'] . '/20-' . strtolower($this->installationName) . '.conf', implode("\n", $fileContent));
 
