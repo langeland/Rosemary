@@ -85,7 +85,7 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 	private function task_createDirectories() {
 		$this->output->writeln(vsprintf('Creating directory structure at: %s', array($this->configuration['locations']['document_root'] . strtolower($this->installationName))));
 
-		$baseDir = $this->configuration['locations']['document_root'] . strtolower($this->installationName) . '/';
+		$baseDir = $this->configuration['locations']['document_root'] . '/' . strtolower($this->installationName) . '/';
 
 		if (!mkdir($baseDir, 0777)) {
 			$this->outputLine('Failed to create folders...');
@@ -179,7 +179,7 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 		$settingsYamlTemplate->setVar('dbname', sprintf($this->configuration['database']['database'], strtolower($this->installationName)));
 		$fileContent = $settingsYamlTemplate->render();
 
-		file_put_contents($this->configuration['locations']['document_root'] . $this->installationName . '/' . $this->configuration['locations']['flow_dir'] . 'Configuration/Settings.yaml', $fileContent);
+		file_put_contents($this->configuration['locations']['document_root'] . $this->installationName . '/' . $this->configuration['locations']['flow_dir'] . '/Configuration/Settings.yaml', $fileContent);
 	}
 
 	private function task_setfilepermissions() {
@@ -214,7 +214,6 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 		$fileContent = $virtualHostTemplate->render();
 
 		file_put_contents($this->configuration['locations']['apache_sites'] . '/20-' . strtolower($this->installationName) . '.conf', $fileContent);
-
 	}
 
 }

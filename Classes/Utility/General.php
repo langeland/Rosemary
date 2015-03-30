@@ -14,4 +14,8 @@ class General {
 		}
 	}
 
+	public function isSite (){
+
+	}
+
 }

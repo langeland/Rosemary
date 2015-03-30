@@ -2,7 +2,7 @@
 locations:
   document_root: /home/sites
   flow_dir: flow
-  apache_sites: /etc/apache2/sites-enabled
+  apache_sites: /etc/apache2/sites-available
 
 database_root:
   host: localhost
