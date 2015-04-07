@@ -30,8 +30,8 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 		try {
 			$this->validateArgumentSource($input->getArgument('source'));
 			$this->validateArgumentName($input->getArgument('name'));
-		} catch (Exception $e) {
-			die('Error on validate arguments');
+		} catch (\Exception $e) {
+			die('Error on validate arguments: ' . $e->getMessage());
 		}
 
 		try {
@@ -56,13 +56,17 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 	protected function validateArgumentSource($source) {
 		$this->installationSource = $source;
 
-		if (preg_match('*((git|ssh|http(s)?)|(git@[\w\.]+))(:(//)?)([\w\.@\:/\-~]+)(\.git)(/)?*i', $source)) {
-			$this->installationType = 'git';
-		} else {
+		if (preg_match("*^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?$*", $source)) {
 			$this->installationType = 'composer';
+			return TRUE;
+		} elseif (preg_match('*([A-Za-z0-9]+@|http(|s)\:\/\/)([A-Za-z0-9.]+)(:|/)([A-Za-z0-9\/]+)(\.git)?*', $source)) {
+			$this->installationType = 'git';
+			return TRUE;
+		} else {
+			throw new \Exception('Sourse is not a valid git repository or a valid Packagist package');
+			return FALSE;
 		}
 
-		return TRUE;
 	}
 
 	/**

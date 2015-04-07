@@ -8,6 +8,10 @@ From Packagist
 From Git
   <info>rosemary create neos git@github.com:langeland/neos-base-distribution.git</info>
 
+  <info>rosemary create neos git@github.com:UserName/Example.git</info>
+  <info>rosemary create neos https://UserName@github.com/UserName/Example.git</info>
+  <info>rosemary create neos git://github.com/UserName/Example.git</info>
+
 After 'rosemary create' run
   <info>sudo a2ensite 20-neos8</info>
   <info>sudo service apache2 reload</info>

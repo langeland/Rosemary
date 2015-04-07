@@ -12,8 +12,8 @@ if (file_exists(__DIR__ . '/Libraries/autoload.php')) {
 define('ROOT_DIR', __DIR__);
 
 $application = new \Symfony\Component\Console\Application('Rosemary', '0.1-dev');
-$application->add(new Rosemary\Command\EnvironmentSetupCommand());
+#$application->add(new Rosemary\Command\EnvironmentSetupCommand());
 $application->add(new Rosemary\Command\CreateCommand());
 $application->add(new Rosemary\Command\SynchronizeCommand());
-$application->add(new Rosemary\Command\DeleteCommand());
+#$application->add(new Rosemary\Command\DeleteCommand());
 $application->run();
