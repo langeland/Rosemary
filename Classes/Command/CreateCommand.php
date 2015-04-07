@@ -87,7 +87,7 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 	 *
 	 */
 	private function task_createDirectories() {
-		$this->output->writeln(vsprintf('Creating directory structure at: %s', array($this->configuration['locations']['document_root'] . strtolower($this->installationName))));
+		$this->output->writeln(vsprintf('Creating directory structure at: %s', array($this->configuration['locations']['document_root'] . '/' . strtolower($this->installationName))));
 
 		$baseDir = $this->configuration['locations']['document_root'] . '/' . strtolower($this->installationName) . '/';
 
