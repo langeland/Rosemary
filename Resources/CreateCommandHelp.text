@@ -1,17 +1,19 @@
 This is the help text
 
+This script should NOT be run as root !!
+
 Example:
 
 From Packagist
-  <info>rosemary create neos typo3/flow-base-distribution</info>
+  <info>rosemary create sitename typo3/flow-base-distribution</info>
 
 From Git
-  <info>rosemary create neos git@github.com:langeland/neos-base-distribution.git</info>
+  <info>rosemary create sitename git@github.com:langeland/neos-base-distribution.git</info>
 
-  <info>rosemary create neos git@github.com:UserName/Example.git</info>
-  <info>rosemary create neos https://UserName@github.com/UserName/Example.git</info>
-  <info>rosemary create neos git://github.com/UserName/Example.git</info>
+  <info>rosemary create sitename git@github.com:UserName/Example.git</info>
+  <info>rosemary create sitename https://UserName@github.com/UserName/Example.git</info>
+  <info>rosemary create sitename git://github.com/UserName/Example.git</info>
 
 After 'rosemary create' run
-  <info>sudo a2ensite 20-neos8</info>
+  <info>sudo a2ensite 20-[sitename]</info>
   <info>sudo service apache2 reload</info>

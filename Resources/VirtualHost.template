@@ -2,9 +2,9 @@
 	ServerName {installationName}.dev
 
 	## Vhost docroot
-	DocumentRoot "{documentRoot}{installationName}/{flowDir}/Web"
+	DocumentRoot "{documentRoot}/{installationName}/{flowDir}/Web"
 
-	<Directory "{documentRoot}{installationName}/{flowDir}/Web">
+	<Directory "{documentRoot}/{installationName}/{flowDir}/Web">
 		AllowOverride All
 		Order allow,deny
 		Allow from all
@@ -16,7 +16,7 @@
 	</FilesMatch>
 
 	## Logging
-	ErrorLog "{documentRoot}{installationName}/logs/error.log"
+	ErrorLog "{documentRoot}/{installationName}/logs/error.log"
 	ServerSignature Off
-	CustomLog "{documentRoot}{installationName}/logs/access.log" combined
+	CustomLog "{documentRoot}/{installationName}/logs/access.log" combined
 </VirtualHost>

@@ -116,10 +116,10 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 		if ($this->installationType == 'composer') {
 			$this->outputLine('  Running composer: php /path/to/composer.phar create-project %s %s', array(
 				$this->installationSource,
-				$this->configuration['locations']['document_root'] . $this->installationName
+				$this->configuration['locations']['document_root'] . '/' . $this->installationName
 			));
 
-			chdir($this->configuration['locations']['document_root'] . strtolower($this->installationName) . '/');
+			chdir($this->configuration['locations']['document_root'] . '/' . strtolower($this->installationName) . '/');
 			system(vsprintf(
 				'composer --verbose --no-progress --no-interaction --keep-vcs create-project %s flow',
 				array(
@@ -132,7 +132,7 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 				$this->installationSource,
 			));
 
-			chdir($this->configuration['locations']['document_root'] . strtolower($this->installationName) . '/');
+			chdir($this->configuration['locations']['document_root'] . '/' . strtolower($this->installationName) . '/');
 			system(vsprintf(
 				'git clone %s flow',
 				array(
@@ -140,7 +140,7 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 				)
 			));
 
-			chdir($this->configuration['locations']['document_root'] . strtolower($this->installationName) . '/flow/');
+			chdir($this->configuration['locations']['document_root'] . '/' . strtolower($this->installationName) . '/flow/');
 			system(vsprintf(
 				'composer --verbose --no-progress --no-interaction install',
 				array()
@@ -183,7 +183,7 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 		$settingsYamlTemplate->setVar('dbname', sprintf($this->configuration['database']['database'], strtolower($this->installationName)));
 		$fileContent = $settingsYamlTemplate->render();
 
-		file_put_contents($this->configuration['locations']['document_root'] . $this->installationName . '/' . $this->configuration['locations']['flow_dir'] . '/Configuration/Settings.yaml', $fileContent);
+		file_put_contents($this->configuration['locations']['document_root'] . '/' . $this->installationName . '/' . $this->configuration['locations']['flow_dir'] . '/Configuration/Settings.yaml', $fileContent);
 	}
 
 	private function task_setfilepermissions() {
@@ -197,7 +197,7 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 			)
 		);
 
-		chdir($this->configuration['locations']['document_root'] . $this->installationName . '/' . $this->configuration['locations']['flow_dir']);
+		chdir($this->configuration['locations']['document_root'] . '/' . $this->installationName . '/' . $this->configuration['locations']['flow_dir']);
 		system(vsprintf(
 			'sudo ./flow flow:core:setfilepermissions %s %s %s',
 			array(
@@ -209,7 +209,7 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 	}
 
 	private function task_createVhost() {
-		$this->outputLine('Creating virtual host: "%s"', array($this->configuration['locations']['apache_sites'] . '20-' . strtolower($this->installationName) . '.conf'));
+		$this->outputLine('Creating virtual host: "%s"', array($this->configuration['locations']['apache_sites'] . '/20-' . strtolower($this->installationName) . '.conf'));
 
 		$virtualHostTemplate = new \Rosemary\Service\Template(\Rosemary\Utility\General::getResourcePathAndName('VirtualHost.template'));
 		$virtualHostTemplate->setVar('installationName', strtolower($this->installationName));
@@ -217,7 +217,17 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 		$virtualHostTemplate->setVar('flowDir', $this->configuration['locations']['flow_dir']);
 		$fileContent = $virtualHostTemplate->render();
 
-		file_put_contents($this->configuration['locations']['apache_sites'] . '/20-' . strtolower($this->installationName) . '.conf', $fileContent);
+		$file = tempnam ('/tmp', 'rosemary');
+
+		file_put_contents($file, $fileContent);
+
+		system(vsprintf(
+			'sudo mv %s %s',
+			array(
+				$file,
+				$this->configuration['locations']['apache_sites'] . '/20-' . strtolower($this->installationName) . '.conf',
+			)
+		));
 	}
 
 }

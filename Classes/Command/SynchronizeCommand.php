@@ -53,7 +53,7 @@ class SynchronizeCommand extends \Rosemary\Command\AbstractCommand {
 	 */
 	protected function validateArgumentName($name) {
 		$this->installationName = $name;
-		if (is_dir($this->configuration['locations']['document_root'] . strtolower($this->installationName))) {
+		if (is_dir($this->configuration['locations']['document_root'] . '/' . strtolower($this->installationName))) {
 			return TRUE;
 		} else {
 			throw new \Exception('Installation not found. (' . $this->configuration['locations']['document_root'] . '/' . strtolower($this->installationName) . ')');
@@ -74,6 +74,10 @@ class SynchronizeCommand extends \Rosemary\Command\AbstractCommand {
 	 ******************************************************************************************************************/
 
 	private function task_syncronizeFiles() {
+		if (!is_dir($this->configuration['locations']['document_root'] . '/' . strtolower($this->installationName) . '/flow/Data/Persistent/Resources')) {
+			mkdir($this->configuration['locations']['document_root'] . '/' . strtolower($this->installationName) . '/flow/Data/Persistent/Resources', 0777, TRUE);
+		}
+
 		$cmd = vsprintf('rsync -av --delete rsync@moc-files:/volume1/developer/%s/flow/Data/Persistent/Resources/ %s/%s/flow/Data/Persistent/Resources/', array(
 			$this->datasource,
 			$this->configuration['locations']['document_root'],
@@ -87,6 +91,9 @@ class SynchronizeCommand extends \Rosemary\Command\AbstractCommand {
 	}
 
 	private function task_syncronizeDatabase() {
+		if (!is_dir($this->configuration['locations']['document_root'] . '/' . strtolower($this->installationName) . '/db-dumps')) {
+			mkdir($this->configuration['locations']['document_root'] . '/' . strtolower($this->installationName) . '/db-dumps', 0777, TRUE);
+		}
 
 		$cmd = vsprintf('rsync -av --delete rsync@moc-files:/volume1/developer/%s/db-dumps/ %s/%s/db-dumps/', array(
 			$this->datasource,
@@ -119,11 +126,12 @@ class SynchronizeCommand extends \Rosemary\Command\AbstractCommand {
 		}
 
 		$cmd = vsprintf(
-			'mysql -h %s -u %s %s < %s/%s/db-dumps/database.sql',
+			'mysql -h %s -u %s %s %s < %s/%s/db-dumps/database.sql',
 			array(
 				$this->configuration['database_root']['host'],
 				$this->configuration['database_root']['username'],
 				($this->configuration['database_root']['password'] != '') ? '-p' . $this->configuration['database_root']['password'] : '',
+				sprintf($this->configuration['database']['database'], strtolower($this->installationName)),
 				$this->configuration['locations']['document_root'],
 				$this->installationName
 			)

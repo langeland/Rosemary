@@ -3,5 +3,5 @@ This is the help text
 Example:
 
 From moc-files
-  <info>rosemary sync neos venstre_dk</info>
+  <info>rosemary sync sitename venstre_dk</info>
 
