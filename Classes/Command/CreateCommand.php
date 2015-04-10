@@ -2,6 +2,10 @@
 
 namespace Rosemary\Command;
 
+use Rosemary\Utility\General;
+use Symfony\Component\Yaml\Exception\ParseException;
+use Symfony\Component\Yaml\Yaml;
+
 class CreateCommand extends \Rosemary\Command\AbstractCommand {
 
 	private $installationName = NULL;
@@ -38,7 +42,6 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 			$this->task_createDirectories();
 			$this->task_cloneSource();
 			$this->task_createDatabase();
-			$this->task_updateSettings();
 			$this->task_setfilepermissions();
 			$this->task_createVhost();
 		} catch (\Exception $e) {
@@ -54,16 +57,26 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 	 * @return bool
 	 */
 	protected function validateArgumentSource($source) {
+
 		$this->installationSource = $source;
 
-		if (preg_match("*^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?$*", $source)) {
+			// Check if source is in alias files
+		$siteAliases = General::getAlises();
+		foreach($siteAliases as $alias => $conf) {
+			if ($alias === $source) {
+				$this->outputLine(sprintf('Alias %s found with installation source %s', $alias, $conf['source']));
+				$this->installationSource = $conf['source'];
+			}
+		}
+
+		if (preg_match("*^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?$*", $this->installationSource)) {
 			$this->installationType = 'composer';
 			return TRUE;
-		} elseif (preg_match('*([A-Za-z0-9]+@|http(|s)\:\/\/)([A-Za-z0-9.]+)(:|/)([A-Za-z0-9\/]+)(\.git)?*', $source)) {
+		} elseif (preg_match('*([A-Za-z0-9]+@|http(|s)\:\/\/)([A-Za-z0-9.]+)(:|/)([A-Za-z0-9\/]+)(\.git)?*', $this->installationSource)) {
 			$this->installationType = 'git';
 			return TRUE;
 		} else {
-			throw new \Exception('Sourse is not a valid git repository or a valid Packagist package');
+			throw new \Exception('Source is not a valid alias, git repository or Packagist package');
 			return FALSE;
 		}
 
@@ -147,43 +160,63 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 			));
 		}
 	}
+	/**
+	 * @return array
+	 */
+	protected function getDestinationDatabaseConfig() {
+		$settingsFile = $this->configuration['locations']['document_root'] . '/' . $this->installationName . '/' . $this->configuration['locations']['flow_dir'] . '/Configuration/Development/Settings.yaml';
+		if (file_exists($settingsFile) === FALSE) {
+			die('Settings file' . $settingsFile . 'not found' . PHP_EOL);
+		}
+
+		try {
+			$yaml = Yaml::parse(file_get_contents($settingsFile));
+			return $yaml['TYPO3']['Flow']['persistence']['backendOptions'];
+		} catch (ParseException $e) {
+			die('Unable to parse yam file ' . $settingsFile);
+		}
+	}
 
 	private function task_createDatabase() {
 
-		$this->outputLine('Create database: %s', array(
-			strtolower($this->installationName)
-		));
+		$databaseConfig = $this->getDestinationDatabaseConfig();
+		var_dump($databaseConfig);
 
-		$this->outputLine('  Running: mysql -h %s -u %s %s -e "CREATE DATABASE %s DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;"', array(
+		$this->outputLine('Create database: %s', array($databaseConfig['dbname']));
+
+		$this->outputLine('  Running: mysql -h %s -u %s %s -e "CREATE DATABASE \`%s\` DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;"', array(
 			$this->configuration['database_root']['host'],
 			$this->configuration['database_root']['username'],
-			($this->configuration['database_root']['password'] != '') ? '-p' . $this->configuration['database_root']['password'] : '',
-			strtolower($this->installationName)
+			($this->configuration['database_root']['password'] != '') ? '-p' . $this->configuration['database_root']['password'] : '', $databaseConfig['dbname']
 		));
 
 		system(vsprintf(
-			'mysql -h %s -u %s %s -e "DROP DATABASE IF EXISTS %s; CREATE DATABASE %s DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;"',
+			'mysql -h %s -u %s %s -e "DROP DATABASE IF EXISTS \`%s\`; CREATE DATABASE \`%s\` DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;"',
 			array(
 				$this->configuration['database_root']['host'],
 				$this->configuration['database_root']['username'],
 				($this->configuration['database_root']['password'] != '') ? '-p' . $this->configuration['database_root']['password'] : '',
-				strtolower($this->installationName),
-				sprintf($this->configuration['database']['database'], strtolower($this->installationName))
+				$databaseConfig['dbname'],
+				$databaseConfig['dbname']
 			)
 		));
-	}
 
-	private function task_updateSettings() {
-		$this->outputLine('Updating Configuration/Settings.yaml');
+		$dbUser = array_key_exists('user', $databaseConfig) ? $databaseConfig['user'] : 'root';
+		$dbPassword = array_key_exists('password', $databaseConfig) ? $databaseConfig['password'] : '';
+		if ($dbUser !== 'root') {
+			$permissionsCommand = sprintf('mysql -h %s -u %s %s -e "GRANT ALL ON \`%s\`.* to \'%s\'@\'localhost\' identified by \'%s\'"',
+					$this->configuration['database_root']['host'],
+					$this->configuration['database_root']['username'],
+					($this->configuration['database_root']['password'] != '') ? '-p' . $this->configuration['database_root']['password'] : '',
+					$databaseConfig['dbname'],
+					$dbUser,
+					$dbPassword
+			);
+			$this->outputLine('  Running ' . $permissionsCommand);
+			system($permissionsCommand);
+		}
 
-		$settingsYamlTemplate = new \Rosemary\Service\Template(\Rosemary\Utility\General::getResourcePathAndName('SettingsYaml.template'));
-		$settingsYamlTemplate->setVar('host', $this->configuration['database']['host']);
-		$settingsYamlTemplate->setVar('user', $this->configuration['database']['username']);
-		$settingsYamlTemplate->setVar('password', $this->configuration['database']['password']);
-		$settingsYamlTemplate->setVar('dbname', sprintf($this->configuration['database']['database'], strtolower($this->installationName)));
-		$fileContent = $settingsYamlTemplate->render();
-
-		file_put_contents($this->configuration['locations']['document_root'] . '/' . $this->installationName . '/' . $this->configuration['locations']['flow_dir'] . '/Configuration/Settings.yaml', $fileContent);
+		return;
 	}
 
 	private function task_setfilepermissions() {

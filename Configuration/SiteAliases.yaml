@@ -1,0 +1,11 @@
+---
+
+vdk:
+  description: 'Venstre.dk Neos site'
+  source: git@git.moc.net:Distributions/VenstreDk.git
+  datasource: rsync@moc-files:/volume1/developer/venstre_dk/
+
+folkekirken:
+  description: 'Folkekirken dk Neos site'
+  source: git@git.moc.net:Distributions/VenstreDk.git
+  datasource: rsync@moc-files:/volume1/developer/folkekirkendk/

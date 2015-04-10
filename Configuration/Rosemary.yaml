@@ -3,11 +3,11 @@ locations:
   document_root: /home/sites
   flow_dir: flow
   apache_sites: /etc/apache2/sites-available
-
+  log_dir: /home/vagrant
 database_root:
   host: localhost
   username: root
-  password: vagrant
+  password: ""
 
 permissions:
   file_modes: 766
@@ -15,7 +15,4 @@ permissions:
   group: www-data
 
 database:
-  host: localhost
-  username: typo3
-  password: joh316
-  database: typo3_%s
+  database: %s

@@ -2,6 +2,9 @@
 
 namespace Rosemary\Utility;
 
+use Symfony\Component\Yaml\Exception\ParseException;
+use Symfony\Component\Yaml\Yaml;
+
 class General {
 
 	public static function getResourcePathAndName($resourceName) {
@@ -15,6 +18,24 @@ class General {
 	}
 
 	public function isSite (){
+
+	}
+
+	/**
+	 *
+	 */
+	public static function getAlises() {
+		$aliasFile = ROOT_DIR . '/Configuration/SiteAliases.yaml';
+		if (file_exists($aliasFile) === FALSE) {
+			die('Alis file' . $aliasFile . 'not found' . PHP_EOL);
+		}
+
+		try {
+			$yaml = Yaml::parse(file_get_contents($aliasFile));
+			return $yaml;
+		} catch (ParseException $e) {
+			$this->outputLine('Error: ' . $e->getMessage());
+		}
 
 	}
 

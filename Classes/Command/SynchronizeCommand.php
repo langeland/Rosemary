@@ -2,11 +2,24 @@
 
 namespace Rosemary\Command;
 
+use Rosemary\Utility\General;
+use Symfony\Component\Yaml\Exception\ParseException;
+use Symfony\Component\Yaml\Yaml;
+
 class SynchronizeCommand extends \Rosemary\Command\AbstractCommand {
 
 	private $installationName = NULL;
 
 	private $datasource = NULL;
+
+	private $logfile = NULL;
+
+	private $siteConf = NULL;
+
+	/**
+	 * @var string
+	 */
+	private $destinationDatabaseName = NULL;
 
 	public function __construct() {
 		parent::__construct();
@@ -18,20 +31,28 @@ class SynchronizeCommand extends \Rosemary\Command\AbstractCommand {
 			->setDescription('Synchronize data from moc-files to local project')
 			->setHelp(file_get_contents(ROOT_DIR . '/Resources/SynchronizeCommandHelp.text'))
 			->addArgument('name', \Symfony\Component\Console\Input\InputArgument::REQUIRED, 'Set the name of the installation')
-			->addArgument('datasource', \Symfony\Component\Console\Input\InputArgument::REQUIRED, 'Set the remode tata source name');
+			->addArgument('alias', \Symfony\Component\Console\Input\InputArgument::REQUIRED, 'Set the site alias. See available aliases with rosemary alias');
 	}
 
 	protected function execute(\Symfony\Component\Console\Input\InputInterface $input, \Symfony\Component\Console\Output\OutputInterface $output) {
 		$this->input = $input;
 		$this->output = $output;
 
+
 		try {
 			$this->validateArgumentName($input->getArgument('name'));
-			$this->validateArgumentDatasource($input->getArgument('datasource'));
+			$this->validateArgumentAlias($input->getArgument('alias'));
 		} catch (\Exception $e) {
 			die('Error on validate arguments: ' . $e->getMessage());
 		}
 
+		$this->determineDestinationDatabasename();
+		$this->logfile = $this->configuration['locations']['log_dir'] . '/' . 'rosemary-sync-' . date('d-m-Y-H-i-s') . '.log';
+
+
+
+		$this->outputLine('Starting import of data for ' . $this->siteConf['description']);
+		$this->outputLine(' Logging to ' . $this->logfile);
 		try {
 			$this->task_syncronizeFiles();
 			$this->task_syncronizeDatabase();
@@ -61,12 +82,37 @@ class SynchronizeCommand extends \Rosemary\Command\AbstractCommand {
 	}
 
 	/**
-	 * @param $datasource
+	 * @param $alias
 	 * @return bool
 	 */
-	protected function validateArgumentDatasource($datasource) {
-		$this->datasource = $datasource;
+	protected function validateArgumentAlias($alias) {
+		$siteAliases = General::getAlises();
+		foreach($siteAliases as $alias => $conf) {
+			if ($alias === $alias) {
+				$this->siteConf = $conf;
+				$this->datasource = rtrim($this->siteConf['datasource'], '/');
+				return;
+			}
+		}
+		throw new \Exception(sprintf('Unable to sync for unknown site alias %s', $alias));
 		return TRUE;
+	}
+
+	/**
+	 * @return void
+	 */
+	protected function determineDestinationDatabasename() {
+		$settingsFile = $this->configuration['locations']['document_root'] . '/' . $this->installationName . '/' . $this->configuration['locations']['flow_dir'] . '/Configuration/Development/Settings.yaml';
+		if (file_exists($settingsFile) === FALSE) {
+			die('Settings file' . $settingsFile . 'not found' . PHP_EOL);
+		}
+
+		try {
+			$yaml = Yaml::parse(file_get_contents($settingsFile));
+			$this->destinationDatabaseName = $yaml['TYPO3']['Flow']['persistence']['backendOptions']['dbname'];
+		} catch (ParseException $e) {
+			die('Unable to parse yam file ' . $settingsFile);
+		}
 	}
 
 	/*******************************************************************************************************************
@@ -78,16 +124,19 @@ class SynchronizeCommand extends \Rosemary\Command\AbstractCommand {
 			mkdir($this->configuration['locations']['document_root'] . '/' . strtolower($this->installationName) . '/flow/Data/Persistent/Resources', 0777, TRUE);
 		}
 
-		$cmd = vsprintf('rsync -av --delete rsync@moc-files:/volume1/developer/%s/flow/Data/Persistent/Resources/ %s/%s/flow/Data/Persistent/Resources/', array(
+		$cmd = vsprintf('rsync -av --delete %s/flow/Data/Persistent/Resources/ %s/%s/flow/Data/Persistent/Resources/', array(
 			$this->datasource,
 			$this->configuration['locations']['document_root'],
 			$this->installationName
 		));
 
-		system($cmd, $exitCode);
+		$this->outputLine(' - Synchronize Resources');
+		$output = array(PHP_EOL . '*****************************************************************' . PHP_EOL . 'Command: ' . $cmd . PHP_EOL . '*****************************************************************' . PHP_EOL);
+		exec($cmd, $output, $exitCode);
 		if ($exitCode !== 0) {
 			throw new \Exception('rsync faild: (' . $cmd . ')');
 		}
+		file_put_contents($this->logfile, implode(PHP_EOL, $output), FILE_APPEND);
 	}
 
 	private function task_syncronizeDatabase() {
@@ -95,17 +144,18 @@ class SynchronizeCommand extends \Rosemary\Command\AbstractCommand {
 			mkdir($this->configuration['locations']['document_root'] . '/' . strtolower($this->installationName) . '/db-dumps', 0777, TRUE);
 		}
 
-		$cmd = vsprintf('rsync -av --delete rsync@moc-files:/volume1/developer/%s/db-dumps/ %s/%s/db-dumps/', array(
+		$cmd = vsprintf('rsync -av --delete %s/db-dumps/ %s/%s/db-dumps/', array(
 			$this->datasource,
 			$this->configuration['locations']['document_root'],
 			$this->installationName
 		));
-
-		system($cmd, $exitCode);
+		$this->outputLine(' - Synchronize databasedump');
+		$output = array(PHP_EOL . '*****************************************************************' . PHP_EOL . 'Command: ' . $cmd . PHP_EOL . '*****************************************************************' . PHP_EOL);
+		exec($cmd, $output, $exitCode);
 		if ($exitCode !== 0) {
 			throw new \Exception('rsync faild: (' . $cmd . ')');
 		}
-
+		file_put_contents($this->logfile, implode(PHP_EOL, $output), FILE_APPEND);
 	}
 
 	private function task_importDatabase() {
@@ -119,12 +169,15 @@ class SynchronizeCommand extends \Rosemary\Command\AbstractCommand {
 				sprintf($this->configuration['database']['database'], strtolower($this->installationName))
 			)
 		);
-
-		system($cmd, $exitCode);
+		$this->outputLine(' - Dropping and recreating database');
+		$output = array(PHP_EOL . '*****************************************************************' . PHP_EOL . 'Command: ' . $cmd . PHP_EOL . '*****************************************************************' . PHP_EOL);
+		exec($cmd, $output, $exitCode);
 		if ($exitCode !== 0) {
 			throw new \Exception('mysql faild: (' . $cmd . ')');
 		}
+		file_put_contents($this->logfile, implode(PHP_EOL, $output), FILE_APPEND);
 
+		$this->outputLine(' - Loading databasedump');
 		$cmd = vsprintf(
 			'mysql -h %s -u %s %s %s < %s/%s/db-dumps/database.sql',
 			array(
@@ -136,12 +189,13 @@ class SynchronizeCommand extends \Rosemary\Command\AbstractCommand {
 				$this->installationName
 			)
 		);
-
-		system($cmd, $exitCode);
+		$output = array('Command: ' . $cmd);
+		exec($cmd, $output, $exitCode);
 		if ($exitCode !== 0) {
 			throw new \Exception('mysql faild: (' . $cmd . ')');
 		}
-
+		$output = array(PHP_EOL . '*****************************************************************' . PHP_EOL . 'Command: ' . $cmd . PHP_EOL . '*****************************************************************' . PHP_EOL);
+		file_put_contents($this->logfile, implode(PHP_EOL, $output), FILE_APPEND);
 	}
 
 }

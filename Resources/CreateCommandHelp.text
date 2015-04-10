@@ -1,8 +1,20 @@
-This is the help text
+Create a new Neos site.
 
-This script should NOT be run as root !!
+This script should NOT be run as root, but as vagrant
+
+The script will read database settings from Configuration/Development/Settings.yaml and
+create a database with the name specified here. If a user and password is given, this user
+is granted access to the database with the specified password.
+
+The command must be given two parameters, one is the site local sitename that will be created,
+the second can be either an alias of sites, a packagist distribution or a github.
+
+A list of available aliases can be found with rosemary aliases.
 
 Example:
+
+From MOC Alias os sites
+  <info>rosemary create sitename alias</info>
 
 From Packagist
   <info>rosemary create sitename typo3/flow-base-distribution</info>
