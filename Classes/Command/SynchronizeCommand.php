@@ -172,8 +172,8 @@ class SynchronizeCommand extends \Rosemary\Command\AbstractCommand {
 				$this->configuration['database_root']['host'],
 				$this->configuration['database_root']['username'],
 				($this->configuration['database_root']['password'] != '') ? '-p' . $this->configuration['database_root']['password'] : '',
-				sprintf($this->configuration['database']['database'], strtolower($this->installationName)),
-				sprintf($this->configuration['database']['database'], strtolower($this->installationName))
+				$this->destinationDatabaseName,
+				$this->destinationDatabaseName
 			)
 		);
 		$this->outputLine(' - Dropping and recreating database');
@@ -191,7 +191,7 @@ class SynchronizeCommand extends \Rosemary\Command\AbstractCommand {
 				$this->configuration['database_root']['host'],
 				$this->configuration['database_root']['username'],
 				($this->configuration['database_root']['password'] != '') ? '-p' . $this->configuration['database_root']['password'] : '',
-				sprintf($this->configuration['database']['database'], strtolower($this->installationName)),
+				$this->destinationDatabaseName,
 				$this->configuration['locations']['document_root'],
 				$this->installationName
 			)
