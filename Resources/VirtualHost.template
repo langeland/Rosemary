@@ -1,4 +1,4 @@
-<VirtualHost *:80>
+<VirtualHost *:8081>
 	ServerName {installationName}.dev
 
 	## Vhost docroot
@@ -9,11 +9,6 @@
 		Order allow,deny
 		Allow from all
 	</Directory>
-
-	<FilesMatch "\.php$">
-		Require all granted
-		SetHandler proxy:fcgi://127.0.0.1:9000
-	</FilesMatch>
 
 	## Logging
 	ErrorLog "{documentRoot}/{installationName}/logs/error.log"
