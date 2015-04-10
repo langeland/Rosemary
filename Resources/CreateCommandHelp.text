@@ -25,7 +25,3 @@ From Git
   <info>rosemary create git@github.com:UserName/Example.git sitename</info>
   <info>rosemary create https://UserName@github.com/UserName/Example.git sitename</info>
   <info>rosemary create  git://github.com/UserName/Example.git sitename</info>
-
-After 'rosemary create' run
-  <info>sudo a2ensite 20-[sitename]</info>
-  <info>sudo service apache2 reload</info>

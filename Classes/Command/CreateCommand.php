@@ -55,6 +55,7 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 			$this->task_createDatabase();
 			$this->task_setfilepermissions();
 			$this->task_createVhost();
+			$this->task_installVhostAndRestartApache();
 		} catch (\Exception $e) {
 			die('It all stops here: ' . $e->getMessage());
 		}
@@ -194,7 +195,7 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 			$yaml = Yaml::parse(file_get_contents($settingsFile));
 			return $yaml['TYPO3']['Flow']['persistence']['backendOptions'];
 		} catch (ParseException $e) {
-			die('Unable to parse yam file ' . $settingsFile);
+			die('Unable to parse yaml file ' . $settingsFile);
 		}
 	}
 
@@ -271,10 +272,26 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 			'sudo mv %s %s',
 			array(
 				$file,
-				$this->configuration['locations']['apache_sites'] . '/20-' . strtolower($this->installationName) . '.conf',
+				$this->configuration['locations']['apache_sites'] . '/' . strtolower($this->installationName),
 			)
 		);
-		$this->outputLine('  Creating virtual host: "%s"', array($this->configuration['locations']['apache_sites'] . '/20-' . strtolower($this->installationName) . '.conf'));
+		$this->outputLine('  Creating virtual host: "%s"', array($this->configuration['locations']['apache_sites'] . strtolower($this->installationName)));
+		$output = array(PHP_EOL . '*****************************************************************' . PHP_EOL . 'Command: ' . $cmd . PHP_EOL . '*****************************************************************' . PHP_EOL);
+		exec($cmd, $output, $exitCode);
+		file_put_contents($this->logfile, implode(PHP_EOL, $output), FILE_APPEND);
+	}
+
+	private function task_installVhostAndRestartApache() {
+		$cmd = vsprintf('sudo a2ensite %s', strtolower($this->installationName));
+		$this->outputLine('  - Install vhost');
+		$this->runCommand($cmd);
+
+		$cmd = 'sudo apache2ctl graceful';
+		$this->outputLine('  - Restart apache');
+		$this->runCommand($cmd);
+	}
+
+	private function runCommand($cmd) {
 		$output = array(PHP_EOL . '*****************************************************************' . PHP_EOL . 'Command: ' . $cmd . PHP_EOL . '*****************************************************************' . PHP_EOL);
 		exec($cmd, $output, $exitCode);
 		file_put_contents($this->logfile, implode(PHP_EOL, $output), FILE_APPEND);

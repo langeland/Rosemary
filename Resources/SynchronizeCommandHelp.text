@@ -8,5 +8,5 @@ The command takes two arguments, the first is the sitename on your local machine
 Example:
 
 From moc-files
-  <info>rosemary sync sitename alias</info>
+  <info>rosemary sync alias [sitename]</info>
 
