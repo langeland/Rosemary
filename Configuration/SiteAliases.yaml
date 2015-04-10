@@ -7,5 +7,5 @@ vdk:
 
 folkekirken:
   description: 'Folkekirken dk Neos site'
-  source: git@git.moc.net:Distributions/VenstreDk.git
-  datasource: rsync@moc-files:/volume1/developer/folkekirkendk/
+  source: git@github.com:folkekirkensit/Distributions-FolkekirkenDk.git
+  datasource: rsync@moc-files:/volume1/developer/folkekirken_dk/

@@ -30,8 +30,8 @@ class SynchronizeCommand extends \Rosemary\Command\AbstractCommand {
 			->setName('sync')
 			->setDescription('Synchronize data from moc-files to local project')
 			->setHelp(file_get_contents(ROOT_DIR . '/Resources/SynchronizeCommandHelp.text'))
-			->addArgument('name', \Symfony\Component\Console\Input\InputArgument::REQUIRED, 'Set the name of the installation')
-			->addArgument('alias', \Symfony\Component\Console\Input\InputArgument::REQUIRED, 'Set the site alias. See available aliases with rosemary alias');
+			->addArgument('alias', \Symfony\Component\Console\Input\InputArgument::REQUIRED, 'Set the site alias. See available aliases with rosemary alias')
+			->addArgument('name', \Symfony\Component\Console\Input\InputArgument::OPTIONAL, 'Set the name of the installation. If not given, the alias is used');
 	}
 
 	protected function execute(\Symfony\Component\Console\Input\InputInterface $input, \Symfony\Component\Console\Output\OutputInterface $output) {
@@ -40,8 +40,15 @@ class SynchronizeCommand extends \Rosemary\Command\AbstractCommand {
 
 
 		try {
-			$this->validateArgumentName($input->getArgument('name'));
+
 			$this->validateArgumentAlias($input->getArgument('alias'));
+			if ($input->getArgument('name') != '') {
+				$this->validateArgumentName($input->getArgument('name'));
+			} else {
+				$this->validateArgumentName($input->getArgument('alias'));
+			}
+
+
 		} catch (\Exception $e) {
 			die('Error on validate arguments: ' . $e->getMessage());
 		}

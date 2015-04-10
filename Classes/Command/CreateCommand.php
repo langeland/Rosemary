@@ -14,6 +14,8 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 
 	private $installationSource = '';
 
+	private $logfile = NULL;
+
 	public function __construct() {
 		parent::__construct();
 	}
@@ -23,8 +25,8 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 			->setName('create')
 			->setDescription('Create blank project')
 			->setHelp(file_get_contents(ROOT_DIR . '/Resources/CreateCommandHelp.text'))
-			->addArgument('name', \Symfony\Component\Console\Input\InputArgument::REQUIRED, 'Set the name of the installation')
-			->addArgument('source', \Symfony\Component\Console\Input\InputArgument::REQUIRED, 'Set the source fof the installation. Can be a packagist package "vendor/package" or a git reposirory "git@github.com:user/vendor-package.git"');
+			->addArgument('source', \Symfony\Component\Console\Input\InputArgument::REQUIRED, 'Set the source of the installation. Can be a aite alias, a packagist package "vendor/package" or a git reposirory "git@github.com:user/vendor-package.git"')
+			->addArgument('name', \Symfony\Component\Console\Input\InputArgument::OPTIONAL, 'Set the name of the installation. If no name is given, then the alias is used');
 	}
 
 	protected function execute(\Symfony\Component\Console\Input\InputInterface $input, \Symfony\Component\Console\Output\OutputInterface $output) {
@@ -32,11 +34,20 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 		$this->output = $output;
 
 		try {
-			$this->validateArgumentSource($input->getArgument('source'));
-			$this->validateArgumentName($input->getArgument('name'));
+			$source = $input->getArgument('source');
+			$this->validateArgumentSource($source);
+			if ($input->getArgument('name') != '') {
+				$this->validateArgumentName($input->getArgument('name'));
+			} else {
+				$this->validateArgumentName($source);
+			}
 		} catch (\Exception $e) {
 			die('Error on validate arguments: ' . $e->getMessage());
 		}
+
+		$this->logfile = $this->configuration['locations']['log_dir'] . '/' . 'rosemary-create-' . date('d-m-Y-H-i-s') . '.log';
+
+		$this->outputLine(' Logging to ' . $this->logfile);
 
 		try {
 			$this->task_createDirectories();
@@ -146,18 +157,28 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 			));
 
 			chdir($this->configuration['locations']['document_root'] . '/' . strtolower($this->installationName) . '/');
-			system(vsprintf(
+
+			$cmd = vsprintf(
 				'git clone %s flow',
 				array(
 					$this->installationSource
 				)
-			));
+			);
+			$this->outputLine(' - Git clone');
+			$output = array(PHP_EOL . '*****************************************************************' . PHP_EOL . 'Command: ' . $cmd . PHP_EOL . '*****************************************************************' . PHP_EOL);
+			exec($cmd, $output, $exitCode);
+			file_put_contents($this->logfile, implode(PHP_EOL, $output), FILE_APPEND);
 
 			chdir($this->configuration['locations']['document_root'] . '/' . strtolower($this->installationName) . '/flow/');
-			system(vsprintf(
+			$cmd = vsprintf(
 				'composer --verbose --no-progress --no-interaction install',
 				array()
-			));
+			);
+			$this->outputLine(' - Composer install');
+			$output = array(PHP_EOL . '*****************************************************************' . PHP_EOL . 'Command: ' . $cmd . PHP_EOL . '*****************************************************************' . PHP_EOL);
+			exec($cmd, $output, $exitCode);
+			file_put_contents($this->logfile, implode(PHP_EOL, $output), FILE_APPEND);
+
 		}
 	}
 	/**
@@ -178,19 +199,8 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 	}
 
 	private function task_createDatabase() {
-
 		$databaseConfig = $this->getDestinationDatabaseConfig();
-		var_dump($databaseConfig);
-
-		$this->outputLine('Create database: %s', array($databaseConfig['dbname']));
-
-		$this->outputLine('  Running: mysql -h %s -u %s %s -e "CREATE DATABASE \`%s\` DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;"', array(
-			$this->configuration['database_root']['host'],
-			$this->configuration['database_root']['username'],
-			($this->configuration['database_root']['password'] != '') ? '-p' . $this->configuration['database_root']['password'] : '', $databaseConfig['dbname']
-		));
-
-		system(vsprintf(
+		$cmd = vsprintf(
 			'mysql -h %s -u %s %s -e "DROP DATABASE IF EXISTS \`%s\`; CREATE DATABASE \`%s\` DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;"',
 			array(
 				$this->configuration['database_root']['host'],
@@ -199,7 +209,12 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 				$databaseConfig['dbname'],
 				$databaseConfig['dbname']
 			)
-		));
+		);
+		$this->outputLine('Create database: %s', array($databaseConfig['dbname']));
+		$output = array(PHP_EOL . '*****************************************************************' . PHP_EOL . 'Command: ' . $cmd . PHP_EOL . '*****************************************************************' . PHP_EOL);
+		exec($cmd, $output, $exitCode);
+		file_put_contents($this->logfile, implode(PHP_EOL, $output), FILE_APPEND);
+
 
 		$dbUser = array_key_exists('user', $databaseConfig) ? $databaseConfig['user'] : 'root';
 		$dbPassword = array_key_exists('password', $databaseConfig) ? $databaseConfig['password'] : '';
@@ -212,38 +227,36 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 					$dbUser,
 					$dbPassword
 			);
-			$this->outputLine('  Running ' . $permissionsCommand);
-			system($permissionsCommand);
+			$this->outputLine('  Setting permissions');
+			$output = array(PHP_EOL . '*****************************************************************' . PHP_EOL . 'Command: ' . $permissionsCommand . PHP_EOL . '*****************************************************************' . PHP_EOL);
+			exec($permissionsCommand, $output, $exitCode);
+			file_put_contents($this->logfile, implode(PHP_EOL, $output), FILE_APPEND);
+
 		}
 
 		return;
 	}
 
 	private function task_setfilepermissions() {
-		$this->outputLine('Adjust file permissions for CLI and web server access');
-		$this->outputLine(
-			'Running: sudo ./flow flow:core:setfilepermissions %s %s %s',
-			array(
-				$this->configuration['permissions']['owner'],
-				$this->configuration['permissions']['group'],
-				$this->configuration['permissions']['group']
-			)
-		);
+
 
 		chdir($this->configuration['locations']['document_root'] . '/' . $this->installationName . '/' . $this->configuration['locations']['flow_dir']);
-		system(vsprintf(
+		$cmd = vsprintf(
 			'sudo ./flow flow:core:setfilepermissions %s %s %s',
 			array(
 				$this->configuration['permissions']['owner'],
 				$this->configuration['permissions']['group'],
 				$this->configuration['permissions']['group']
 			)
-		));
+		);
+		$this->outputLine('Adjust file permissions for CLI and web server access');
+		$output = array(PHP_EOL . '*****************************************************************' . PHP_EOL . 'Command: ' . $cmd . PHP_EOL . '*****************************************************************' . PHP_EOL);
+		exec($cmd, $output, $exitCode);
+		file_put_contents($this->logfile, implode(PHP_EOL, $output), FILE_APPEND);
+
 	}
 
 	private function task_createVhost() {
-		$this->outputLine('Creating virtual host: "%s"', array($this->configuration['locations']['apache_sites'] . '/20-' . strtolower($this->installationName) . '.conf'));
-
 		$virtualHostTemplate = new \Rosemary\Service\Template(\Rosemary\Utility\General::getResourcePathAndName('VirtualHost.template'));
 		$virtualHostTemplate->setVar('installationName', strtolower($this->installationName));
 		$virtualHostTemplate->setVar('documentRoot', $this->configuration['locations']['document_root']);
@@ -254,13 +267,17 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 
 		file_put_contents($file, $fileContent);
 
-		system(vsprintf(
+		$cmd = vsprintf(
 			'sudo mv %s %s',
 			array(
 				$file,
 				$this->configuration['locations']['apache_sites'] . '/20-' . strtolower($this->installationName) . '.conf',
 			)
-		));
+		);
+		$this->outputLine('  Creating virtual host: "%s"', array($this->configuration['locations']['apache_sites'] . '/20-' . strtolower($this->installationName) . '.conf'));
+		$output = array(PHP_EOL . '*****************************************************************' . PHP_EOL . 'Command: ' . $cmd . PHP_EOL . '*****************************************************************' . PHP_EOL);
+		exec($cmd, $output, $exitCode);
+		file_put_contents($this->logfile, implode(PHP_EOL, $output), FILE_APPEND);
 	}
 
 }

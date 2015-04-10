@@ -14,17 +14,17 @@ A list of available aliases can be found with rosemary aliases.
 Example:
 
 From MOC Alias os sites
-  <info>rosemary create sitename alias</info>
+  <info>rosemary create alias sitename</info>
 
 From Packagist
-  <info>rosemary create sitename typo3/flow-base-distribution</info>
+  <info>rosemary create typo3/flow-base-distribution sitename</info>
 
 From Git
-  <info>rosemary create sitename git@github.com:langeland/neos-base-distribution.git</info>
+  <info>rosemary create git@github.com:langeland/neos-base-distribution.git sitename</info>
 
-  <info>rosemary create sitename git@github.com:UserName/Example.git</info>
-  <info>rosemary create sitename https://UserName@github.com/UserName/Example.git</info>
-  <info>rosemary create sitename git://github.com/UserName/Example.git</info>
+  <info>rosemary create git@github.com:UserName/Example.git sitename</info>
+  <info>rosemary create https://UserName@github.com/UserName/Example.git sitename</info>
+  <info>rosemary create  git://github.com/UserName/Example.git sitename</info>
 
 After 'rosemary create' run
   <info>sudo a2ensite 20-[sitename]</info>
