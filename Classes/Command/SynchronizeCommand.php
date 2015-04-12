@@ -56,8 +56,6 @@ class SynchronizeCommand extends \Rosemary\Command\AbstractCommand {
 		$this->determineDestinationDatabasename();
 		$this->logfile = $this->configuration['locations']['log_dir'] . '/' . 'rosemary-sync-' . date('d-m-Y-H-i-s') . '.log';
 
-
-
 		$this->outputLine('Starting import of data for ' . $this->siteConf['description']);
 		$this->outputLine(' Logging to ' . $this->logfile);
 		try {
@@ -94,8 +92,8 @@ class SynchronizeCommand extends \Rosemary\Command\AbstractCommand {
 	 */
 	protected function validateArgumentAlias($alias) {
 		$siteAliases = General::getAlises();
-		foreach($siteAliases as $alias => $conf) {
-			if ($alias === $alias) {
+		foreach($siteAliases as $sitealias => $conf) {
+			if ($alias === $sitealias) {
 				$this->siteConf = $conf;
 				$this->datasource = rtrim($this->siteConf['datasource'], '/');
 				return;
@@ -111,14 +109,14 @@ class SynchronizeCommand extends \Rosemary\Command\AbstractCommand {
 	protected function determineDestinationDatabasename() {
 		$settingsFile = $this->configuration['locations']['document_root'] . '/' . $this->installationName . '/' . $this->configuration['locations']['flow_dir'] . '/Configuration/Development/Settings.yaml';
 		if (file_exists($settingsFile) === FALSE) {
-			die('Settings file' . $settingsFile . 'not found' . PHP_EOL);
+			die('Settings file' . $settingsFile . ' not found' . PHP_EOL);
 		}
 
 		try {
 			$yaml = Yaml::parse(file_get_contents($settingsFile));
 			$this->destinationDatabaseName = $yaml['TYPO3']['Flow']['persistence']['backendOptions']['dbname'];
 		} catch (ParseException $e) {
-			die('Unable to parse yam file ' . $settingsFile);
+			die('Unable to parse yaml file ' . $settingsFile);
 		}
 	}
 

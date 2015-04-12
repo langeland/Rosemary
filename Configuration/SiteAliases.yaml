@@ -9,3 +9,8 @@ folkekirken:
   description: 'Folkekirken dk Neos site'
   source: git@github.com:folkekirkensit/Distributions-FolkekirkenDk.git
   datasource: rsync@moc-files:/volume1/developer/folkekirken_dk/
+
+mocadm:
+  description: 'MOC Economy site'
+  source: git@git.moc.net:Distributions/MOC.Administration
+  datasource: rsync@moc-files:/volume1/developer/eco_moc_net/
