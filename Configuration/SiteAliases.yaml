@@ -14,3 +14,8 @@ mocadm:
   description: 'MOC Economy site'
   source: git@git.moc.net:Distributions/MOC.Administration
   datasource: rsync@moc-files:/volume1/developer/eco_moc_net/
+
+mocnet:
+  description: 'MOC.net Neos site'
+  source: git@git.moc.net:Neos/Distributions/Moc.Net
+  datasource: rsync@moc-files:/volume1/developer/moc_net/
