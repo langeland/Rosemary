@@ -14,7 +14,10 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 
 	private $installationSource = '';
 
+	private $installationAlias = NULL;
+
 	private $logfile = NULL;
+
 
 	public function __construct() {
 		parent::__construct();
@@ -78,6 +81,7 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 			if ($alias === $source) {
 				$this->outputLine(sprintf('Alias %s found with installation source %s', $alias, $conf['source']));
 				$this->installationSource = $conf['source'];
+				$this->installationAlias = $alias;
 			}
 		}
 
@@ -169,6 +173,9 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 			$output = array(PHP_EOL . '*****************************************************************' . PHP_EOL . 'Command: ' . $cmd . PHP_EOL . '*****************************************************************' . PHP_EOL);
 			exec($cmd, $output, $exitCode);
 			file_put_contents($this->logfile, implode(PHP_EOL, $output), FILE_APPEND);
+			if ($exitCode !== 0) {
+				die(' !!! Git clone failed. Aborting');
+			}
 
 			chdir($this->configuration['locations']['document_root'] . '/' . strtolower($this->installationName) . '/flow/');
 			$cmd = vsprintf(
@@ -179,6 +186,10 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 			$output = array(PHP_EOL . '*****************************************************************' . PHP_EOL . 'Command: ' . $cmd . PHP_EOL . '*****************************************************************' . PHP_EOL);
 			exec($cmd, $output, $exitCode);
 			file_put_contents($this->logfile, implode(PHP_EOL, $output), FILE_APPEND);
+			if ($exitCode !== 0) {
+				die(' !!! Composer install failed. Aborting');
+			}
+
 
 		}
 	}
@@ -188,7 +199,13 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 	protected function getDestinationDatabaseConfig() {
 		$settingsFile = $this->configuration['locations']['document_root'] . '/' . $this->installationName . '/' . $this->configuration['locations']['flow_dir'] . '/Configuration/Development/Settings.yaml';
 		if (file_exists($settingsFile) === FALSE) {
-			die('Settings file' . $settingsFile . 'not found' . PHP_EOL);
+			if ($this->installationAlias !== NULL) {
+					$this->outputLine('  No Development/Settings.yaml found, falling back to sitename: ' . $this->installationName . ' remember to update Settings afterwards');
+				return array(
+					'dbname' => $this->installationName,
+					'user' => 'root'
+				);
+			}
 		}
 
 		try {
