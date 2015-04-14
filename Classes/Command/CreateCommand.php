@@ -3,8 +3,10 @@
 namespace Rosemary\Command;
 
 use Rosemary\Utility\General;
-use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
+use Symfony\Component\Yaml\Exception\ParseException;
+use Symfony\Component\Process\Process;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 
 class CreateCommand extends \Rosemary\Command\AbstractCommand {
 
@@ -17,7 +19,6 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 	private $installationAlias = NULL;
 
 	private $logfile = NULL;
-
 
 	public function __construct() {
 		parent::__construct();
@@ -50,7 +51,7 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 
 		$this->logfile = $this->configuration['locations']['log_dir'] . '/' . 'rosemary-create-' . date('d-m-Y-H-i-s') . '.log';
 
-		$this->outputLine(' Logging to ' . $this->logfile);
+		$this->outputLine('Logging to ' . $this->logfile);
 
 		try {
 			$this->task_createDirectories();
@@ -75,9 +76,9 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 
 		$this->installationSource = $source;
 
-			// Check if source is in alias files
+		// Check if source is in alias files
 		$siteAliases = General::getAlises();
-		foreach($siteAliases as $alias => $conf) {
+		foreach ($siteAliases as $alias => $conf) {
 			if ($alias === $source) {
 				$this->outputLine(sprintf('Alias %s found with installation source %s', $alias, $conf['source']));
 				$this->installationSource = $conf['source'];
@@ -149,12 +150,13 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 			));
 
 			chdir($this->configuration['locations']['document_root'] . '/' . strtolower($this->installationName) . '/');
-			system(vsprintf(
+			$command = vsprintf(
 				'composer --verbose --no-progress --no-interaction --keep-vcs create-project %s flow',
 				array(
 					$this->installationSource
 				)
-			));
+			);
+			$this->runCommand($command);
 
 		} else {
 			$this->outputLine('  Running git: git clone %s flow', array(
@@ -163,44 +165,32 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 
 			chdir($this->configuration['locations']['document_root'] . '/' . strtolower($this->installationName) . '/');
 
-			$cmd = vsprintf(
+			$command = vsprintf(
 				'git clone %s flow',
 				array(
 					$this->installationSource
 				)
 			);
-			$this->outputLine(' - Git clone');
-			$output = array(PHP_EOL . '*****************************************************************' . PHP_EOL . 'Command: ' . $cmd . PHP_EOL . '*****************************************************************' . PHP_EOL);
-			exec($cmd, $output, $exitCode);
-			file_put_contents($this->logfile, implode(PHP_EOL, $output), FILE_APPEND);
-			if ($exitCode !== 0) {
-				die(' !!! Git clone failed. Aborting');
-			}
+
+			$this->runCommand($command, 'Git clone');
 
 			chdir($this->configuration['locations']['document_root'] . '/' . strtolower($this->installationName) . '/flow/');
-			$cmd = vsprintf(
+			$command = vsprintf(
 				'composer --verbose --no-progress --no-interaction install',
 				array()
 			);
-			$this->outputLine(' - Composer install');
-			$output = array(PHP_EOL . '*****************************************************************' . PHP_EOL . 'Command: ' . $cmd . PHP_EOL . '*****************************************************************' . PHP_EOL);
-			exec($cmd, $output, $exitCode);
-			file_put_contents($this->logfile, implode(PHP_EOL, $output), FILE_APPEND);
-			if ($exitCode !== 0) {
-				die(' !!! Composer install failed. Aborting');
-			}
-
-
+			$this->runCommand($command, 'Composer install');
 		}
 	}
+
 	/**
 	 * @return array
 	 */
 	protected function getDestinationDatabaseConfig() {
 		$settingsFile = $this->configuration['locations']['document_root'] . '/' . $this->installationName . '/' . $this->configuration['locations']['flow_dir'] . '/Configuration/Development/Settings.yaml';
 		if (file_exists($settingsFile) === FALSE) {
-			if ($this->installationAlias !== NULL) {
-					$this->outputLine('  No Development/Settings.yaml found, falling back to sitename: ' . $this->installationName . ' remember to update Settings afterwards');
+			if ($this->installationAlias === NULL) {
+				$this->outputLine('  No Development/Settings.yaml found, falling back to sitename: ' . $this->installationName . ' remember to update Settings afterwards');
 				return array(
 					'dbname' => $this->installationName,
 					'user' => 'root'
@@ -218,7 +208,7 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 
 	private function task_createDatabase() {
 		$databaseConfig = $this->getDestinationDatabaseConfig();
-		$cmd = vsprintf(
+		$command = vsprintf(
 			'mysql -h %s -u %s %s -e "DROP DATABASE IF EXISTS \`%s\`; CREATE DATABASE \`%s\` DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;"',
 			array(
 				$this->configuration['database_root']['host'],
@@ -229,37 +219,30 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 			)
 		);
 		$this->outputLine('Create database: %s', array($databaseConfig['dbname']));
-		$output = array(PHP_EOL . '*****************************************************************' . PHP_EOL . 'Command: ' . $cmd . PHP_EOL . '*****************************************************************' . PHP_EOL);
-		exec($cmd, $output, $exitCode);
-		file_put_contents($this->logfile, implode(PHP_EOL, $output), FILE_APPEND);
-
+		$this->runCommand($command);
 
 		$dbUser = array_key_exists('user', $databaseConfig) ? $databaseConfig['user'] : 'root';
 		$dbPassword = array_key_exists('password', $databaseConfig) ? $databaseConfig['password'] : '';
 		if ($dbUser !== 'root') {
-			$permissionsCommand = sprintf('mysql -h %s -u %s %s -e "GRANT ALL ON \`%s\`.* to \'%s\'@\'localhost\' identified by \'%s\'"',
-					$this->configuration['database_root']['host'],
-					$this->configuration['database_root']['username'],
-					($this->configuration['database_root']['password'] != '') ? '-p' . $this->configuration['database_root']['password'] : '',
-					$databaseConfig['dbname'],
-					$dbUser,
-					$dbPassword
+			$command = sprintf('mysql -h %s -u %s %s -e "GRANT ALL ON \`%s\`.* to \'%s\'@\'localhost\' identified by \'%s\'"',
+				$this->configuration['database_root']['host'],
+				$this->configuration['database_root']['username'],
+				($this->configuration['database_root']['password'] != '') ? '-p' . $this->configuration['database_root']['password'] : '',
+				$databaseConfig['dbname'],
+				$dbUser,
+				$dbPassword
 			);
-			$this->outputLine('  Setting permissions');
-			$output = array(PHP_EOL . '*****************************************************************' . PHP_EOL . 'Command: ' . $permissionsCommand . PHP_EOL . '*****************************************************************' . PHP_EOL);
-			exec($permissionsCommand, $output, $exitCode);
-			file_put_contents($this->logfile, implode(PHP_EOL, $output), FILE_APPEND);
 
+			$this->outputLine('Create database user: %s', array($dbUser));
+			$this->runCommand($command);
 		}
 
 		return;
 	}
 
 	private function task_setfilepermissions() {
-
-
 		chdir($this->configuration['locations']['document_root'] . '/' . $this->installationName . '/' . $this->configuration['locations']['flow_dir']);
-		$cmd = vsprintf(
+		$command = vsprintf(
 			'sudo ./flow flow:core:setfilepermissions %s %s %s',
 			array(
 				$this->configuration['permissions']['owner'],
@@ -267,11 +250,7 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 				$this->configuration['permissions']['group']
 			)
 		);
-		$this->outputLine('Adjust file permissions for CLI and web server access');
-		$output = array(PHP_EOL . '*****************************************************************' . PHP_EOL . 'Command: ' . $cmd . PHP_EOL . '*****************************************************************' . PHP_EOL);
-		exec($cmd, $output, $exitCode);
-		file_put_contents($this->logfile, implode(PHP_EOL, $output), FILE_APPEND);
-
+		$this->runCommand($command, 'Adjust file permissions for CLI and web server access');
 	}
 
 	private function task_createVhost() {
@@ -281,37 +260,55 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 		$virtualHostTemplate->setVar('flowDir', $this->configuration['locations']['flow_dir']);
 		$fileContent = $virtualHostTemplate->render();
 
-		$file = tempnam ('/tmp', 'rosemary');
-
+		$file = tempnam('/tmp', 'rosemary');
 		file_put_contents($file, $fileContent);
 
-		$cmd = vsprintf(
+		$command = vsprintf(
 			'sudo mv %s %s',
 			array(
 				$file,
 				$this->configuration['locations']['apache_sites'] . '/' . strtolower($this->installationName),
 			)
 		);
-		$this->outputLine('  Creating virtual host: "%s"', array($this->configuration['locations']['apache_sites'] . strtolower($this->installationName)));
-		$output = array(PHP_EOL . '*****************************************************************' . PHP_EOL . 'Command: ' . $cmd . PHP_EOL . '*****************************************************************' . PHP_EOL);
-		exec($cmd, $output, $exitCode);
-		file_put_contents($this->logfile, implode(PHP_EOL, $output), FILE_APPEND);
+
+		$this->outputLine('  Creating virtual host: "%s"', array($this->configuration['locations']['apache_sites'] . '/' . strtolower($this->installationName)));
+		$this->runCommand($command);
 	}
 
 	private function task_installVhostAndRestartApache() {
-		$cmd = vsprintf('sudo a2ensite %s', strtolower($this->installationName));
+		$command = vsprintf('sudo a2ensite %s', strtolower($this->installationName));
 		$this->outputLine('  - Install vhost');
-		$this->runCommand($cmd);
+		$this->runCommand($command);
 
-		$cmd = 'sudo apache2ctl graceful';
+		$command = 'sudo apache2ctl graceful';
 		$this->outputLine('  - Restart apache');
-		$this->runCommand($cmd);
+		$this->runCommand($command);
 	}
 
-	private function runCommand($cmd) {
-		$output = array(PHP_EOL . '*****************************************************************' . PHP_EOL . 'Command: ' . $cmd . PHP_EOL . '*****************************************************************' . PHP_EOL);
-		exec($cmd, $output, $exitCode);
-		file_put_contents($this->logfile, implode(PHP_EOL, $output), FILE_APPEND);
+	private function runCommand($command, $description = NULL) {
+
+		if ($description) {
+			$this->outputLine('  - ' . $description);
+		}
+
+		$process = new Process($command);
+		$process->setTimeout(3600);
+		try {
+			$process->mustRun();
+			$output = PHP_EOL . '*****************************************************************' . PHP_EOL;
+			if ($description) {
+				$output .= '**  ' . $description . PHP_EOL;
+			}
+			$output .= '** ' . 'Command: ' . $command . PHP_EOL;
+			$output .= '*****************************************************************' . PHP_EOL . PHP_EOL;
+
+			$output .= $process->getOutput() . PHP_EOL;
+			file_put_contents($this->logfile, $output, FILE_APPEND);
+		} catch (ProcessFailedException $e) {
+			$this->outputLine(' !!! Command failed. Aborting');
+			$this->outputLine($e->getMessage());
+			die(1);
+		}
 	}
 
 }

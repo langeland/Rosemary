@@ -20,8 +20,8 @@ class ListCommand extends \Rosemary\Command\AbstractCommand {
 		foreach (General::getAlises() as $alias => $conf) {
 			$this->outputLine(str_pad(' - ' . $alias, 18, ' ', STR_PAD_RIGHT) . $conf['description']);
 		}
-
 	}
+
 	/*******************************************************************************************************************
 	 *
 	 ******************************************************************************************************************/
