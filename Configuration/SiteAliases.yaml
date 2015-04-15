@@ -19,3 +19,8 @@ mocnet:
   description: 'MOC.net Neos site'
   source: git@git.moc.net:Neos/Distributions/Moc.Net
   datasource: rsync@moc-files:/volume1/developer/moc_net/
+
+domuspro:
+  description: 'Domuspro webservice Flow installation'
+  source: git@git.moc.net:Distributions/DomusPro.git
+  datasource: rsync@moc-files:/volume1/developer/domuspro/
