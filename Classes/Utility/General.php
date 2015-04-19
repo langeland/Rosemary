@@ -27,7 +27,7 @@ class General {
 	public static function getAlises() {
 		$aliasFile = ROOT_DIR . '/Configuration/SiteAliases.yaml';
 		if (file_exists($aliasFile) === FALSE) {
-			die('Alis file' . $aliasFile . 'not found' . PHP_EOL);
+			die('Alias file' . $aliasFile . 'not found. ' . PHP_EOL . ' Run rosemary update-aliases first' . PHP_EOL);
 		}
 
 		try {

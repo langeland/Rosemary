@@ -12,8 +12,6 @@ class SynchronizeCommand extends \Rosemary\Command\AbstractCommand {
 
 	private $datasource = NULL;
 
-	private $logfile = NULL;
-
 	private $siteConf = NULL;
 
 	/**

@@ -5,8 +5,6 @@ namespace Rosemary\Command;
 use Rosemary\Utility\General;
 use Symfony\Component\Yaml\Yaml;
 use Symfony\Component\Yaml\Exception\ParseException;
-use Symfony\Component\Process\Process;
-use Symfony\Component\Process\Exception\ProcessFailedException;
 
 class CreateCommand extends \Rosemary\Command\AbstractCommand {
 
@@ -17,8 +15,6 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 	private $installationSource = '';
 
 	private $installationAlias = NULL;
-
-	private $logfile = NULL;
 
 	public function __construct() {
 		parent::__construct();
@@ -285,30 +281,6 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 		$this->runCommand($command);
 	}
 
-	private function runCommand($command, $description = NULL) {
 
-		if ($description) {
-			$this->outputLine('  - ' . $description);
-		}
-
-		$process = new Process($command);
-		$process->setTimeout(3600);
-		try {
-			$process->mustRun();
-			$output = PHP_EOL . '*****************************************************************' . PHP_EOL;
-			if ($description) {
-				$output .= '**  ' . $description . PHP_EOL;
-			}
-			$output .= '** ' . 'Command: ' . $command . PHP_EOL;
-			$output .= '*****************************************************************' . PHP_EOL . PHP_EOL;
-
-			$output .= $process->getOutput() . PHP_EOL;
-			file_put_contents($this->logfile, $output, FILE_APPEND);
-		} catch (ProcessFailedException $e) {
-			$this->outputLine(' !!! Command failed. Aborting');
-			$this->outputLine($e->getMessage());
-			die(1);
-		}
-	}
 
 }

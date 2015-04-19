@@ -24,3 +24,8 @@ domuspro:
   description: 'Domuspro webservice Flow installation'
   source: git@git.moc.net:Distributions/DomusPro.git
   datasource: rsync@moc-files:/volume1/developer/domuspro/
+
+meia:
+  description: 'Niras meiadata.com site'
+  source: 'git@git.moc.net:Distributions/Niras.Meia'
+  datasource: rsync@moc-files:/volume1/developer/meiadata/  
