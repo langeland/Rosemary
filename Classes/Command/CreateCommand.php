@@ -53,6 +53,7 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 			$this->task_createDirectories();
 			$this->task_cloneSource();
 			$this->task_createDatabase();
+			$this->task_updateSettings();
 			$this->task_setfilepermissions();
 			$this->task_createVhost();
 			$this->task_installVhostAndRestartApache();
@@ -234,6 +235,21 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 		}
 
 		return;
+	}
+
+	private function task_updateSettings() {
+		if(file_exists($this->configuration['locations']['document_root'] . '/' . $this->installationName . '/' . $this->configuration['locations']['flow_dir'] . '/Configuration/Development/Settings.yaml')) {
+			$this->outputLine('Configuration/Development/Settings.yaml exists', array());
+		} else {
+			$this->outputLine('Creating Configuration/Settings.yaml');
+			$settingsYamlTemplate = new \Rosemary\Service\Template(\Rosemary\Utility\General::getResourcePathAndName('SettingsYaml.template'));
+			$settingsYamlTemplate->setVar('host', $this->configuration['database']['host']);
+			$settingsYamlTemplate->setVar('user', $this->configuration['database']['username']);
+			$settingsYamlTemplate->setVar('password', $this->configuration['database']['password']);
+			$settingsYamlTemplate->setVar('dbname', sprintf($this->configuration['database']['database'], strtolower($this->installationName)));
+			$fileContent = $settingsYamlTemplate->render();
+			file_put_contents($this->configuration['locations']['document_root'] . '/' . $this->installationName . '/' . $this->configuration['locations']['flow_dir'] . '/Configuration/Settings.yaml', $fileContent);
+		}
 	}
 
 	private function task_setfilepermissions() {

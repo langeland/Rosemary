@@ -13,7 +13,7 @@ TYPO3:
     persistence:
       backendOptions:
         driver: pdo_mysql
-        host: {host}
-        user: {user}
-        password: {password}
         dbname: {dbname}
+        user: {user}
+        password: '{password}'
+        host: {host}

@@ -15,4 +15,7 @@ permissions:
   group: www-data
 
 database:
+  host: localhost
+  username: root
+  password:
   database: %s
