@@ -6,12 +6,6 @@ class DeleteCommand extends \Rosemary\Command\AbstractCommand {
 
 	private $installationName = NULL;
 
-	private $mainFunction = 'Main';
-
-	public function __construct() {
-		parent::__construct();
-	}
-
 	protected function configure() {
 		$this
 			->setName('delete')
@@ -29,11 +23,14 @@ class DeleteCommand extends \Rosemary\Command\AbstractCommand {
 			die('Error on validate arguments: ' . $e->getMessage());
 		}
 
-		call_user_func(array($this, 'execute' . $this->mainFunction));
+		$helper = $this->getHelper('question');
+		$question = new \Symfony\Component\Console\Question\ConfirmationQuestion('Continue with this action? [y/N] ', false);
+		if (!$helper->ask($input, $output, $question)) {
+			die('Aborting..');
+		}
 
-	}
-
-	private function executeMain() {
+		$this->logfile = $this->configuration['locations']['log_dir'] . '/' . 'rosemary-delete-' . date('d-m-Y-H-i-s') . '.log';
+		$this->outputLine('Logging to ' . $this->logfile);
 
 		try {
 			$this->task_deleteVhost();
@@ -42,20 +39,6 @@ class DeleteCommand extends \Rosemary\Command\AbstractCommand {
 		} catch (\Exception $e) {
 			die('It all stops here: ' . $e->getMessage());
 		}
-
-	}
-
-	private function executeList() {
-
-		$this->outputLine('Availeble sites:');
-		$this->outputLine();
-
-		$sites = array_diff(scandir($this->configuration['locations']['document_root']), array('..', '.'));
-
-		foreach ($sites as $site) {
-			$this->outputLine($site);
-		}
-
 
 	}
 
@@ -68,13 +51,7 @@ class DeleteCommand extends \Rosemary\Command\AbstractCommand {
 	 * @return bool
 	 */
 	protected function validateArgumentName($name) {
-
-		if ($name === '' || $name === NULL) {
-			$this->mainFunction = 'List';
-		} else {
-			$this->installationName = $name;
-		}
-
+		$this->installationName = $name;
 		return TRUE;
 	}
 
@@ -83,49 +60,22 @@ class DeleteCommand extends \Rosemary\Command\AbstractCommand {
 	 ******************************************************************************************************************/
 
 	private function task_deleteVhost() {
-		$this->outputLine(
-			'Unloading apache virtual host: %s',
-			array(
-				$this->installationName
-			)
-		);
+		$command = vsprintf('sudo a2dissite %s', strtolower($this->installationName));
+		$this->runCommand($command, 'Unloading virtual host');
+
+		$command = 'sudo apache2ctl graceful';
+		$this->runCommand($command, 'Restart apache');
 
 		$command = vsprintf(
-			'a2dissite 20-%s',
+			'sudo rm %s',
 			array(
-				$this->installationName
+				$this->configuration['locations']['apache_sites'] . '/' . strtolower($this->installationName),
 			)
 		);
-		$this->outputLine('  <comment>%s</comment>', array($command));
-		system($command);
-
-		$this->outputLine(
-			'Deleting apache virtual host: %s',
-			array(
-				$this->installationName
-			)
-		);
-
-		$command = vsprintf(
-			'rm %s',
-			array(
-				$this->configuration['locations']['apache_sites'] . '/20-' . strtolower($this->installationName) . '.conf'
-			)
-		);
-		$this->outputLine('  <comment>%s</comment>', array($command));
-		system($command);
-
-
+		$this->runCommand($command, 'Deleting virtual host file');
 	}
 
 	private function task_deleteDatabase() {
-		$this->outputLine(
-			'Deleting database: %s',
-			array(
-				$this->installationName
-			)
-		);
-
 		$command = vsprintf(
 			'mysql -h %s -u %s %s -e "DROP DATABASE IF EXISTS %s;"',
 			array(
@@ -135,29 +85,18 @@ class DeleteCommand extends \Rosemary\Command\AbstractCommand {
 				strtolower($this->installationName),
 			)
 		);
-		$this->outputLine('  <comment>%s</comment>', array($command));
-		system($command);
-
+		$this->runCommand($command, 'Deleting database: ' . strtolower($this->installationName));
 	}
 
 	private function task_deleteDirectories() {
 		$baseDir = $this->configuration['locations']['document_root'] . '/' . strtolower($this->installationName);
-		$this->outputLine(
-			'Deleting fileStructure: %s',
-			array(
-				$baseDir
-			)
-		);
-
 		$command = vsprintf(
 			'rm -fR %s',
 			array(
 				$baseDir
 			)
 		);
-		$this->outputLine('  <comment>%s</comment>', array($command));
-		system($command);
-
+		$this->runCommand($command, 'Deleting file structure: ' . $baseDir);
 	}
 
 }

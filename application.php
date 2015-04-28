@@ -16,5 +16,5 @@ $application->add(new Rosemary\Command\CreateCommand());
 $application->add(new Rosemary\Command\SynchronizeCommand());
 $application->add(new Rosemary\Command\ListSeedsCommand());
 $application->add(new Rosemary\Command\UpdateSeedsCommand());
-#$application->add(new Rosemary\Command\DeleteCommand());
+$application->add(new Rosemary\Command\DeleteCommand());
 $application->run();
