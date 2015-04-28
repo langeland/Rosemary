@@ -52,7 +52,11 @@ class AbstractCommand extends \Symfony\Component\Console\Command\Command {
 		if (is_array($array2)) {
 			foreach ($array2 as $key => $val) {
 				if (is_array($array2[$key])) {
-					$merged[$key] = is_array($merged[$key]) ? $this->array_merge_recursive_distinct($merged[$key], $array2[$key]) : $array2[$key];
+					if(array_key_exists($key, $merged) && is_array($merged[$key])){
+						$$merged[$key] = $this->array_merge_recursive_distinct($merged[$key], $array2[$key]);
+					} else {
+						$merged[$key] = $array2[$key];
+					}
 				} else {
 					$merged[$key] = $val;
 				}

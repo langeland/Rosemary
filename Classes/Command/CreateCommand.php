@@ -14,7 +14,7 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 
 	private $installationSource = '';
 
-	private $installationAlias = NULL;
+	private $installationSeed = NULL;
 
 	public function __construct() {
 		parent::__construct();
@@ -25,8 +25,8 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 			->setName('create')
 			->setDescription('Create blank project')
 			->setHelp(file_get_contents(ROOT_DIR . '/Resources/CreateCommandHelp.text'))
-			->addArgument('source', \Symfony\Component\Console\Input\InputArgument::REQUIRED, 'Set the source of the installation. Can be a aite alias, a packagist package "vendor/package" or a git reposirory "git@github.com:user/vendor-package.git"')
-			->addArgument('name', \Symfony\Component\Console\Input\InputArgument::OPTIONAL, 'Set the name of the installation. If no name is given, then the alias is used');
+			->addArgument('source', \Symfony\Component\Console\Input\InputArgument::REQUIRED, 'Set the source of the installation. Can be a site seed, a packagist package "vendor/package" or a git reposirory "git@github.com:user/vendor-package.git"')
+			->addArgument('name', \Symfony\Component\Console\Input\InputArgument::OPTIONAL, 'Set the name of the installation. If no name is given, then the seed is used');
 	}
 
 	protected function execute(\Symfony\Component\Console\Input\InputInterface $input, \Symfony\Component\Console\Output\OutputInterface $output) {
@@ -73,13 +73,13 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 
 		$this->installationSource = $source;
 
-		// Check if source is in alias files
-		$siteAliases = General::getAlises();
-		foreach ($siteAliases as $alias => $conf) {
-			if ($alias === $source) {
-				$this->outputLine(sprintf('Alias %s found with installation source %s', $alias, $conf['source']));
+		// Check if source is in seed files
+		$siteSeeds = General::getSeeds();
+		foreach ($siteSeeds as $seed => $conf) {
+			if ($seed === $source) {
+				$this->outputLine(sprintf('Seed %s found with installation source %s', $seed, $conf['source']));
 				$this->installationSource = $conf['source'];
-				$this->installationAlias = $alias;
+				$this->installationSeed = $seed;
 			}
 		}
 
@@ -90,7 +90,7 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 			$this->installationType = 'git';
 			return TRUE;
 		} else {
-			throw new \Exception('Source is not a valid alias, git repository or Packagist package');
+			throw new \Exception('Source is not a valid seed, git repository or Packagist package');
 			return FALSE;
 		}
 
@@ -186,7 +186,7 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 	protected function getDestinationDatabaseConfig() {
 		$settingsFile = $this->configuration['locations']['document_root'] . '/' . $this->installationName . '/' . $this->configuration['locations']['flow_dir'] . '/Configuration/Development/Settings.yaml';
 		if (file_exists($settingsFile) === FALSE) {
-			if ($this->installationAlias === NULL) {
+			if ($this->installationSeed === NULL) {
 				$this->outputLine('  No Development/Settings.yaml found, falling back to sitename: ' . $this->installationName . ' remember to update Settings afterwards');
 				return array(
 					'dbname' => $this->installationName,

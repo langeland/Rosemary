@@ -11,11 +11,10 @@ if (file_exists(__DIR__ . '/Libraries/autoload.php')) {
 
 define('ROOT_DIR', __DIR__);
 
-$application = new \Symfony\Component\Console\Application('Rosemary', '0.1-dev');
-#$application->add(new Rosemary\Command\EnvironmentSetupCommand());
+$application = new \Symfony\Component\Console\Application('Rosemary', '0.3-dev');
 $application->add(new Rosemary\Command\CreateCommand());
 $application->add(new Rosemary\Command\SynchronizeCommand());
-$application->add(new Rosemary\Command\ListCommand());
-$application->add(new Rosemary\Command\UpdateAliasesCommand());
+$application->add(new Rosemary\Command\ListSeedsCommand());
+$application->add(new Rosemary\Command\UpdateSeedsCommand());
 #$application->add(new Rosemary\Command\DeleteCommand());
 $application->run();

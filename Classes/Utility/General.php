@@ -24,17 +24,17 @@ class General {
 	/**
 	 *
 	 */
-	public static function getAlises() {
-		$aliasFile = ROOT_DIR . '/Configuration/SiteAliases.yaml';
-		if (file_exists($aliasFile) === FALSE) {
-			die('Alias file' . $aliasFile . 'not found. ' . PHP_EOL . ' Run rosemary update-aliases first' . PHP_EOL);
+	public static function getSeeds() {
+		$seedFile = $_SERVER['HOME'] . '/.rosemary/Seeds.yaml';
+		if (file_exists($seedFile) === FALSE) {
+			die('Seed file ' . $seedFile . ' not found. ' . PHP_EOL . ' Run rosemary update-seeds first' . PHP_EOL);
 		}
 
 		try {
-			$yaml = Yaml::parse(file_get_contents($aliasFile));
+			$yaml = Yaml::parse(file_get_contents($seedFile));
 			return $yaml;
 		} catch (ParseException $e) {
-			$this->outputLine('Error: ' . $e->getMessage());
+			die('Error: ' . $e->getMessage());
 		}
 
 	}

@@ -28,8 +28,8 @@ class SynchronizeCommand extends \Rosemary\Command\AbstractCommand {
 			->setName('sync')
 			->setDescription('Synchronize data from moc-files to local project')
 			->setHelp(file_get_contents(ROOT_DIR . '/Resources/SynchronizeCommandHelp.text'))
-			->addArgument('alias', \Symfony\Component\Console\Input\InputArgument::REQUIRED, 'Set the site alias. See available aliases with rosemary alias')
-			->addArgument('name', \Symfony\Component\Console\Input\InputArgument::OPTIONAL, 'Set the name of the installation. If not given, the alias is used');
+			->addArgument('seed', \Symfony\Component\Console\Input\InputArgument::REQUIRED, 'Set the site seed. See available seeds with rosemary list-seeds')
+			->addArgument('name', \Symfony\Component\Console\Input\InputArgument::OPTIONAL, 'Set the name of the installation. If not given, the seed is used');
 	}
 
 	protected function execute(\Symfony\Component\Console\Input\InputInterface $input, \Symfony\Component\Console\Output\OutputInterface $output) {
@@ -39,11 +39,11 @@ class SynchronizeCommand extends \Rosemary\Command\AbstractCommand {
 
 		try {
 
-			$this->validateArgumentAlias($input->getArgument('alias'));
+			$this->validateArgumentSeed($input->getArgument('seed'));
 			if ($input->getArgument('name') != '') {
 				$this->validateArgumentName($input->getArgument('name'));
 			} else {
-				$this->validateArgumentName($input->getArgument('alias'));
+				$this->validateArgumentName($input->getArgument('seed'));
 			}
 
 
@@ -85,19 +85,19 @@ class SynchronizeCommand extends \Rosemary\Command\AbstractCommand {
 	}
 
 	/**
-	 * @param $alias
-	 * @return bool
+	 * @param string $seed
+	 * @return bool|void
+	 * @throws \Exception
 	 */
-	protected function validateArgumentAlias($alias) {
-		$siteAliases = General::getAlises();
-		foreach($siteAliases as $sitealias => $conf) {
-			if ($alias === $sitealias) {
+	protected function validateArgumentSeed($seed) {
+		foreach(General::getSeeds() as $siteSeed => $conf) {
+			if ($seed === $siteSeed) {
 				$this->siteConf = $conf;
 				$this->datasource = rtrim($this->siteConf['datasource'], '/');
 				return;
 			}
 		}
-		throw new \Exception(sprintf('Unable to sync for unknown site alias %s', $alias));
+		throw new \Exception(sprintf('Unable to sync for unknown site seed %s', $seed));
 		return TRUE;
 	}
 

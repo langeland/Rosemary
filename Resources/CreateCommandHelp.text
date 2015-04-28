@@ -7,14 +7,14 @@ create a database with the name specified here. If a user and password is given,
 is granted access to the database with the specified password.
 
 The command must be given two parameters, one is the site local sitename that will be created,
-the second can be either an alias of sites, a packagist distribution or a github.
+the second can be either an seed of sites, a packagist distribution or a github.
 
-A list of available aliases can be found with rosemary aliases.
+A list of available seeds can be found with rosemary list-seeds.
 
 Example:
 
-From MOC Alias os sites
-  <info>rosemary create alias sitename</info>
+From MOC Seed
+  <info>rosemary create seed sitename</info>
 
 From Packagist
   <info>rosemary create typo3/flow-base-distribution sitename</info>
