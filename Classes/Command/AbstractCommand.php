@@ -72,25 +72,40 @@ class AbstractCommand extends \Symfony\Component\Console\Command\Command {
 			$this->outputLine('  - ' . $description);
 		}
 
+		$output = PHP_EOL . '*****************************************************************' . PHP_EOL;
+		if ($description) {
+			$output .= '** ' . $description . PHP_EOL;
+		}
+		$output .= '** Command: ' . $command . PHP_EOL;
+		$output .= '*****************************************************************' . PHP_EOL . PHP_EOL;
+		if ($this->logfile) {
+			file_put_contents($this->logfile, $output, FILE_APPEND);
+		} else {
+			$this->outputLine($output);
+		}
+
 		$process = new Process($command);
 		$process->setTimeout(3600);
 		try {
 			$process->mustRun();
-			$output = PHP_EOL . '*****************************************************************' . PHP_EOL;
-			if ($description) {
-				$output .= '**  ' . $description . PHP_EOL;
-			}
-			$output .= '** ' . 'Command: ' . $command . PHP_EOL;
-			$output .= '*****************************************************************' . PHP_EOL . PHP_EOL;
-
-			$output .= $process->getOutput() . PHP_EOL;
+			$output = $process->getOutput() . PHP_EOL;
 			if ($this->logfile) {
 				file_put_contents($this->logfile, $output, FILE_APPEND);
 			}
 		} catch (ProcessFailedException $e) {
 			$this->outputLine(' !!! Command failed. Aborting');
+			$this->outputLine('  - Command: ' . $command);
 			$this->outputLine($e->getMessage());
-			die(1);
+
+			if ($this->logfile) {
+				$output = PHP_EOL . 'Command failed. Aborting.' . PHP_EOL;
+				$output .= 'Command: ' . $command . PHP_EOL;
+				$output .= 'Current/working directory: ' . getcwd() . PHP_EOL;
+				$output .= $process->getErrorOutput();
+				file_put_contents($this->logfile, $output, FILE_APPEND);
+			}
+
+			throw new \Exception('Command failed. Aborting: ' . $e->getMessage());
 		}
 	}
 
