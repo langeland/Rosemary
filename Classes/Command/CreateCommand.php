@@ -187,13 +187,11 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 	protected function getDestinationDatabaseConfig() {
 		$settingsFile = $this->configuration['locations']['document_root'] . '/' . $this->installationName . '/' . $this->configuration['locations']['flow_dir'] . '/Configuration/Development/Settings.yaml';
 		if (file_exists($settingsFile) === FALSE) {
-			if ($this->installationSeed === NULL) {
-				$this->outputLine('  No Development/Settings.yaml found, falling back to sitename: ' . $this->installationName . ' remember to update Settings afterwards');
-				return array(
-					'dbname' => $this->installationName,
-					'user' => 'root'
-				);
-			}
+			$this->outputLine('  No Development/Settings.yaml found, falling back to sitename: ' . $this->installationName . ' remember to update Settings afterwards');
+			return array(
+				'dbname' => $this->installationName,
+				'user' => 'root'
+			);
 		}
 
 		try {
@@ -239,7 +237,7 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 	}
 
 	private function task_updateSettings() {
-		if(file_exists($this->configuration['locations']['document_root'] . '/' . $this->installationName . '/' . $this->configuration['locations']['flow_dir'] . '/Configuration/Development/Settings.yaml')) {
+		if (file_exists($this->configuration['locations']['document_root'] . '/' . $this->installationName . '/' . $this->configuration['locations']['flow_dir'] . '/Configuration/Development/Settings.yaml')) {
 			$this->outputLine('Configuration/Development/Settings.yaml exists', array());
 		} else {
 			$this->outputLine('Creating Configuration/Settings.yaml');
@@ -284,7 +282,7 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 			)
 		);
 
-		$this->outputLine('  Creating virtual host: "%s"', array($this->configuration['locations']['apache_sites'] . '/' . strtolower($this->installationName)));
+		$this->outputLine('Creating virtual host: "%s"', array($this->configuration['locations']['apache_sites'] . '/' . strtolower($this->installationName)));
 		$this->runCommand($command);
 	}
 
