@@ -57,6 +57,7 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 			$this->task_setfilepermissions();
 			$this->task_createVhost();
 			$this->task_installVhostAndRestartApache();
+			$this->task_executePostCreateCommands();
 		} catch (\Exception $e) {
 			die('It all stops here: ' . $e->getMessage());
 		}
@@ -297,6 +298,20 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 		$this->runCommand($command);
 	}
 
+	private function task_executePostCreateCommands() {
+		if ($this->installationSeed !== NULL) {
+			foreach (General::getSeeds() as $siteSeed => $seedConfiguration) {
+				if ($siteSeed === $this->installationSeed) {
+					continue;
+				}
+			}
 
+			chdir($this->configuration['locations']['document_root'] . '/' . $this->installationName);
+			foreach ($seedConfiguration['post-create-cmd'] as $postCreateCommand) {
+				$this->outputLine('Running post create command: ' . $postCreateCommand);
+				$this->runCommand($postCreateCommand);
+			}
+		}
+	}
 
 }
