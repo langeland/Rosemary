@@ -300,7 +300,7 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 		if ($this->installationSeed !== NULL) {
 			foreach (General::getSeeds() as $siteSeed => $seedConfiguration) {
 				if ($siteSeed === $this->installationSeed) {
-					continue;
+					break;
 				}
 			}
 
