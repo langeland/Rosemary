@@ -305,9 +305,12 @@ class CreateCommand extends \Rosemary\Command\AbstractCommand {
 			}
 
 			chdir($this->configuration['locations']['document_root'] . '/' . $this->installationName);
-			foreach ($seedConfiguration['post-create-cmd'] as $postCreateCommand) {
-				$this->outputLine('Running post create command: ' . $postCreateCommand);
-				$this->runCommand($postCreateCommand);
+
+			if (isset($seedConfiguration['post-create-cmd'])) {
+				foreach ($seedConfiguration['post-create-cmd'] as $postCreateCommand) {
+					$this->outputLine('Running post create command: ' . $postCreateCommand);
+					$this->runCommand($postCreateCommand);
+				}
 			}
 		}
 	}
