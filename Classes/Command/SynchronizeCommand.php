@@ -105,9 +105,24 @@ class SynchronizeCommand extends \Rosemary\Command\AbstractCommand {
 	 * @return void
 	 */
 	protected function determineDestinationDatabasename() {
-		$settingsFile = $this->configuration['locations']['document_root'] . '/' . $this->installationName . '/' . $this->configuration['locations']['flow_dir'] . '/Configuration/Development/Settings.yaml';
-		if (file_exists($settingsFile) === FALSE) {
-			die('Settings file' . $settingsFile . ' not found' . PHP_EOL);
+		$configurationPath = $this->configuration['locations']['document_root'] . '/' . $this->installationName . '/' . $this->configuration['locations']['flow_dir'] . '/Configuration';
+
+		$prioritizedPaths = array(
+			'/Development/Settings.yaml',
+			'/Settings.yaml',
+			'/Production/Settings.yaml'
+		);
+
+		foreach ($prioritizedPaths as $path) {
+			$settingsFile = $configurationPath . $path;
+
+			if (file_exists($settingsFile) === TRUE) {
+				break;
+			}
+		}
+
+		if (!$settingsFile) {
+			die('No settings file was found' . PHP_EOL);
 		}
 
 		try {
