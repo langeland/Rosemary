@@ -1,9 +1,10 @@
 
 locations:
   document_root: /home/sites
-  flow_dir: flow
   apache_sites: /etc/apache2/sites-available
   log_dir: /home/vagrant
+
+
 database_root:
   host: localhost
   username: root
