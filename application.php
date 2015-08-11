@@ -11,10 +11,16 @@ if (file_exists(__DIR__ . '/Libraries/autoload.php')) {
 
 define('ROOT_DIR', __DIR__);
 
-$application = new \Symfony\Component\Console\Application('Rosemary', '0.4-dev');
-//$application->add(new Rosemary\Command\CreateCommand());
+if (is_dir(__DIR__ . '/.git')) {
+	exec('git --git-dir=' . __DIR__ . '/.git rev-parse --verify HEAD 2> /dev/null', $output);
+	$version = substr($output[0], 0, 10);
+} else {
+	$version = '0.4-dev';
+}
+
+$application = new \Symfony\Component\Console\Application('Rosemary', $version);
 $application->add(new Rosemary\Command\InstallCommand());
-$application->add(new Rosemary\Command\InstallEmptyCommand());
+//$application->add(new Rosemary\Command\InstallEmptyCommand());
 $application->add(new Rosemary\Command\SynchronizeCommand());
 $application->add(new Rosemary\Command\ListSeedsCommand());
 $application->add(new Rosemary\Command\UpdateSeedsCommand());

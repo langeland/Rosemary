@@ -2,12 +2,7 @@
 
 namespace Rosemary\Command;
 
-use Rosemary\Utility\General;
-use Symfony\Component\Yaml\Yaml;
-use Symfony\Component\Yaml\Exception\ParseException;
-
 class InstallEmptyCommand extends \Rosemary\Command\AbstractCommand {
-
 
 	public function __construct() {
 		parent::__construct();
@@ -24,12 +19,9 @@ class InstallEmptyCommand extends \Rosemary\Command\AbstractCommand {
 		$this->input = $input;
 		$this->output = $output;
 
-
 		print_r($this->input->getArguments());
 		print_r($this->input->getOptions());
 
 	}
-
-
 
 }

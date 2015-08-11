@@ -6,8 +6,6 @@ class AbstractCommand extends \Symfony\Component\Console\Command\Command {
 
 	protected $configuration = array();
 
-	protected $logfile = NULL;
-
 	/**
 	 * @var \Symfony\Component\Console\Input\InputInterface
 	 */
@@ -20,11 +18,12 @@ class AbstractCommand extends \Symfony\Component\Console\Command\Command {
 
 	public function __construct($name = null) {
 		parent::__construct($name);
+		$this->configuration = $this->configuration = \Rosemary\Utility\General::getConfiguration();
 
 		if (!defined('LOG_FILE')) {
-			$configuration = \Rosemary\Utility\General::getConfiguration();
-			if ($configuration['locations']['log_dir']) {
-				define('LOG_FILE', $configuration['locations']['log_dir'] . '/' . 'rosemary-' . date('d-m-Y-H-i-s') . '.log');
+			if ($this->configuration['locations']['log_dir']) {
+				// TODO: Add command name to logfile name. Issue #17605
+				define('LOG_FILE', $this->configuration['locations']['log_dir'] . '/' . 'rosemary-' . date('d-m-Y-H-i-s') . '.log');
 			}
 		}
 	}

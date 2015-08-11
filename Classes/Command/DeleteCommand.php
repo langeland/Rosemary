@@ -68,10 +68,10 @@ class DeleteCommand extends \Rosemary\Command\AbstractCommand {
 
 		if (is_file('/etc/apache2/sites-enabled/' . strtolower($this->installationName))) {
 			$command = vsprintf('sudo a2dissite %s', strtolower($this->installationName));
-			\Rosemary\Utility\General::runCommand($command, 'Unloading virtual host');
+			\Rosemary\Utility\General::runCommand($this->output, $command, 'Unloading virtual host');
 
 			$command = 'sudo apache2ctl graceful';
-			\Rosemary\Utility\General::runCommand($command, 'Restart apache');
+			\Rosemary\Utility\General::runCommand($this->output, $command, 'Restart apache');
 
 			$command = vsprintf(
 				'sudo rm %s',
@@ -79,7 +79,7 @@ class DeleteCommand extends \Rosemary\Command\AbstractCommand {
 					$this->configuration['locations']['apache_sites'] . '/' . strtolower($this->installationName),
 				)
 			);
-			\Rosemary\Utility\General::runCommand($command, 'Deleting virtual host file');
+			\Rosemary\Utility\General::runCommand($this->output, $command, 'Deleting virtual host file');
 		}
 	}
 
@@ -93,7 +93,7 @@ class DeleteCommand extends \Rosemary\Command\AbstractCommand {
 				strtolower($this->installationName),
 			)
 		);
-		\Rosemary\Utility\General::runCommand($command, 'Deleting database: ' . strtolower($this->installationName));
+		\Rosemary\Utility\General::runCommand($this->output, $command, 'Deleting database: ' . strtolower($this->installationName));
 	}
 
 	private function task_deleteDirectories() {
@@ -104,7 +104,7 @@ class DeleteCommand extends \Rosemary\Command\AbstractCommand {
 				$baseDir
 			)
 		);
-		\Rosemary\Utility\General::runCommand($command, 'Deleting file structure: ' . $baseDir);
+		\Rosemary\Utility\General::runCommand($this->output, $command, 'Deleting file structure: ' . $baseDir);
 	}
 
 }

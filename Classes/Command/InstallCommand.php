@@ -3,8 +3,6 @@
 namespace Rosemary\Command;
 
 use Rosemary\Utility\General;
-use Symfony\Component\Yaml\Yaml;
-use Symfony\Component\Yaml\Exception\ParseException;
 
 class InstallCommand extends \Rosemary\Command\AbstractCommand {
 
@@ -19,11 +17,6 @@ class InstallCommand extends \Rosemary\Command\AbstractCommand {
 	private $installationInstaller = NULL;
 
 	private $installationType = NULL;
-
-//	public function __construct() {
-//		parent::__construct();
-//
-//	}
 
 	/**
 	 * @return null
@@ -50,6 +43,27 @@ class InstallCommand extends \Rosemary\Command\AbstractCommand {
 		try {
 			$this->prepare();
 
+			/*******************************************************************************************************************
+			 *
+			 ******************************************************************************************************************/
+			if ($this->installationSeed !== NULL) {
+				$this->output->writeln('<info>Installation Seed Configuration</info>');
+				$table = new \Symfony\Component\Console\Helper\Table($output);
+				$table
+					->setRows(array(
+						array('description', $this->installationSeedConfiguration['description']),
+						array('source', $this->installationSeedConfiguration['source']),
+						array('type', $this->installationSeedConfiguration['type']),
+						array('datasource', $this->installationSeedConfiguration['datasource']),
+					));
+				$table->render();
+				$this->output->writeln('');
+			}
+
+			/*******************************************************************************************************************
+			 *
+			 ******************************************************************************************************************/
+			$this->output->writeln('<info>Installation Configuration</info>');
 			$table = new \Symfony\Component\Console\Helper\Table($output);
 			$table
 				->setRows(array(
@@ -61,11 +75,14 @@ class InstallCommand extends \Rosemary\Command\AbstractCommand {
 				));
 			$table->render();
 
-			if ($this->installationSeed !== NULL) {
-				$this->output->writeln(print_r($this->installationSeedConfiguration));
-			}
+			/*******************************************************************************************************************
+			 *
+			 ******************************************************************************************************************/
+			$this->output->writeln('<info>Logfile: ' . LOG_FILE . '</info>');
 
-
+			/*******************************************************************************************************************
+			 *
+			 ******************************************************************************************************************/
 			$installationConfiguration = array(
 				'name' => $this->installationName,
 				'source' => $this->installationSource,
@@ -74,6 +91,21 @@ class InstallCommand extends \Rosemary\Command\AbstractCommand {
 				'type' => $this->installationType
 			);
 
+			/*******************************************************************************************************************
+			 *
+			 ******************************************************************************************************************/
+			$helper = $this->getHelper('question');
+			$question = new \Symfony\Component\Console\Question\ConfirmationQuestion('Install ?? [Y/n] ', TRUE);
+
+			if (!$helper->ask($input, $output, $question)) {
+				$output->writeln('No ?? ');
+				return;
+			}
+
+			/*******************************************************************************************************************
+			 *
+			 ******************************************************************************************************************/
+
 			if ($this->installationType === 'flow') {
 				$installer = new \Rosemary\Service\InstallFlowService($input, $output);
 				$installer->install($installationConfiguration);
@@ -81,7 +113,7 @@ class InstallCommand extends \Rosemary\Command\AbstractCommand {
 				$installer = new \Rosemary\Service\InstallCmsService($input, $output);
 				$installer->install($installationConfiguration);
 			} else {
-				die('no no no');
+				throw new \Exception('installationType is not valid');
 			}
 
 		} catch (\Exception $e) {

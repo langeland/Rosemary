@@ -65,6 +65,24 @@ class General {
 		return $configuration;
 	}
 
+
+	public static function getDatabasename($installationName) {
+		$configuration = self::getConfiguration();
+		if(!is_dir($configuration['locations']['document_root'] . '/' . $installationName)){
+			throw new \Exception('Installation not found. (' . $configuration['locations']['document_root'] . '/' . $installationName . ')');
+		}
+
+		if(is_dir($configuration['locations']['document_root'] . '/' . $installationName . '/flow')){
+			//TODO: Implement proper database name lookup for Flow/NEOS
+			return $installationName;
+		} elseif(is_file($configuration['locations']['document_root'] . '/' . $installationName . '/docs/typo3conf/LocalConfiguration.php')){
+			//TODO: Implement proper database name lookup for CMS
+			return $installationName;
+		} else {
+			throw new \Exception('Unable to determen installation type');
+		}
+	}
+
 	private function array_merge_recursive_distinct(array &$array1, &$array2 = null) {
 		$merged = $array1;
 
@@ -84,37 +102,38 @@ class General {
 		return $merged;
 	}
 
-	public static function runCommand($command, $description = NULL) {
-		$output = new \Symfony\Component\Console\Output\ConsoleOutput();
-		$output->writeln('Running command');
+	public static function runCommand(\Symfony\Component\Console\Output\OutputInterface $output, $command, $description = NULL) {
 
-
-
-		if ($description) {
-			$output->writeln('  - ' . $description);
-		}
-
-		$log = PHP_EOL . '**********************************************************************************************************************************' . PHP_EOL;
+		$log = '**********************************************************************************************************************************' . PHP_EOL;
 		if ($description) {
 			$log .= '** ' . $description . PHP_EOL;
 		}
 		$log .= '** Command: ' . $command . PHP_EOL;
-		$log .= '**********************************************************************************************************************************' . PHP_EOL . PHP_EOL;
+		$log .= '**********************************************************************************************************************************';
 
-
-		if (!self::writeLog($log)) {
+		if (self::writeLog($log)) {
+			$output->writeln($log, \Symfony\Component\Console\Output\OutputInterface::VERBOSITY_VERBOSE);
+		} else {
 			$output->writeln($log);
 		}
 
 		$process = new \Symfony\Component\Process\Process($command);
-		$process->setTimeout(3600);
+		$process->setTimeout(null);
 		try {
-			$process->mustRun();
-			$log = $process->getOutput() . PHP_EOL;
-			if (!self::writeLog($log)) {
-				$output->writeln($log);
-			}
+			$process->run(function ($type, $buffer) use ($output) {
+				if (self::writeLog($buffer)) {
+					$output->writeln($buffer, \Symfony\Component\Console\Output\OutputInterface::VERBOSITY_VERBOSE);
+				} else {
+					$output->writeln($buffer);
+				}
+			});
 
+			// executes after the command finishes
+			if ($process->isSuccessful()) {
+				$output->writeln('  Done' . PHP_EOL);
+			} else {
+				throw new \RuntimeException($process->getErrorOutput());
+			}
 
 		} catch (\Symfony\Component\Process\Exception\ProcessFailedException $e) {
 			$output->writeln(' !!! Command failed. Aborting');
@@ -132,12 +151,13 @@ class General {
 		}
 	}
 
-	public static function writeLog($content){
-		if(defined('LOG_FILE')){
-			file_put_contents(LOG_FILE, $content, FILE_APPEND);
+	public static function writeLog($content) {
+		if (defined('LOG_FILE')) {
+			file_put_contents(LOG_FILE . PHP_EOL, $content, FILE_APPEND);
 		} else {
 			return FALSE;
 		}
+		return TRUE;
 	}
 
 }
