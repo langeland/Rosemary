@@ -2,6 +2,7 @@
 
 namespace Rosemary\Service;
 
+use Rosemary\Exception\NoDatabaseNameException;
 use Symfony\Component\Yaml\Exception\ParseException;
 
 class InstallFlowService {
@@ -96,31 +97,15 @@ class InstallFlowService {
 		}
 	}
 
-	/**
-	 * @return array
-	 */
-	protected function getDestinationDatabaseConfig() {
-		$settingsFile = $this->configuration['locations']['document_root'] . '/' . $this->installationConfiguration['name'] . '/flow/Configuration/Development/Settings.yaml';
-		if (file_exists($settingsFile) === FALSE) {
-			$this->output->writeln('  No Development/Settings.yaml found, falling back to sitename: ' . $this->installationConfiguration['name'] . ' remember to update Settings afterwards');
-			return array(
-				'dbname' => $this->installationName,
+	private function task_createDatabase() {
+		try {
+			$databaseConfig = \Rosemary\Utility\General::getDatabaseConfiguration($this->installationConfiguration['name']);
+		} catch (\Rosemary\Exception\NoDatabaseNameException $e) {
+			$databaseConfig = array(
+				'dbname' => $this->installationConfiguration['name'],
 				'user' => 'root'
 			);
 		}
-
-		try {
-			$yaml = \Symfony\Component\Yaml\Yaml::parse(file_get_contents($settingsFile));
-			return $yaml['TYPO3']['Flow']['persistence']['backendOptions'];
-		} catch (\Symfony\Component\Yaml\Exception\ParseException $e) {
-			die('Unable to parse yaml file ' . $settingsFile);
-		}
-	}
-
-	private function task_createDatabase() {
-		// TODO: Improve database configuration handling, must handle, if installation name not same at seed, where to get/put datapase config
-		// TODO: Use \Rosemary\Utility\General::getDatabasename()
-		$databaseConfig = $this->getDestinationDatabaseConfig();
 		$command = vsprintf(
 			'mysql -h %s -u %s %s -e "DROP DATABASE IF EXISTS \`%s\`; CREATE DATABASE \`%s\` DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;"',
 			array(

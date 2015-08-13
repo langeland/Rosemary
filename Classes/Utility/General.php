@@ -65,17 +65,48 @@ class General {
 		return $configuration;
 	}
 
-
 	public static function getDatabasename($installationName) {
 		$configuration = self::getConfiguration();
-		if(!is_dir($configuration['locations']['document_root'] . '/' . $installationName)){
+		if (!is_dir($configuration['locations']['document_root'] . '/' . $installationName)) {
 			throw new \Exception('Installation not found. (' . $configuration['locations']['document_root'] . '/' . $installationName . ')');
 		}
 
-		if(is_dir($configuration['locations']['document_root'] . '/' . $installationName . '/flow')){
+		if (is_dir($configuration['locations']['document_root'] . '/' . $installationName . '/flow')) {
 			//TODO: Implement proper database name lookup for Flow/NEOS
+			$command = $configuration['locations']['document_root'] . '/' . $installationName . '/flow/flow typo3.flow:configuration:show --type Settings --path TYPO3.Flow.persistence.backendOptions';
+			$process = new \Symfony\Component\Process\Process($command);
+			$process->setTimeout(null);
+			$process->mustRun();
+			if (!preg_match_all('/dbname:\s([a-z0-9]+)/', $process->getOutput(), $output_array)) {
+				throw new \Rosemary\Exception\NoDatabaseNameException('N/A');
+			}
+			return $output_array[1][0];
+
+		} elseif (is_file($configuration['locations']['document_root'] . '/' . $installationName . '/docs/typo3conf/LocalConfiguration.php')) {
+			//TODO: Implement proper database name lookup for CMS
 			return $installationName;
-		} elseif(is_file($configuration['locations']['document_root'] . '/' . $installationName . '/docs/typo3conf/LocalConfiguration.php')){
+		} else {
+			throw new \Exception('Unable to determen installation type');
+		}
+	}
+
+	public static function getDatabaseConfiguration($installationName) {
+		$configuration = self::getConfiguration();
+		if (!is_dir($configuration['locations']['document_root'] . '/' . $installationName)) {
+			throw new \Exception('Installation not found. (' . $configuration['locations']['document_root'] . '/' . $installationName . ')');
+		}
+
+		if (is_dir($configuration['locations']['document_root'] . '/' . $installationName . '/flow')) {
+			//TODO: Implement proper database name lookup for Flow/NEOS
+
+			$settingsFile = $configuration['locations']['document_root'] . '/' . $installationName . '/flow/Configuration/Development/Settings.yaml';
+			if (file_exists($settingsFile) === FALSE) {
+				throw new \Rosemary\Exception\NoDatabaseNameException('N/A');
+			}
+			$yaml = \Symfony\Component\Yaml\Yaml::parse(file_get_contents($settingsFile));
+			return $yaml['TYPO3']['Flow']['persistence']['backendOptions'];
+
+		} elseif (is_file($configuration['locations']['document_root'] . '/' . $installationName . '/docs/typo3conf/LocalConfiguration.php')) {
 			//TODO: Implement proper database name lookup for CMS
 			return $installationName;
 		} else {
@@ -153,7 +184,7 @@ class General {
 
 	public static function writeLog($content) {
 		if (defined('LOG_FILE')) {
-			file_put_contents(LOG_FILE . PHP_EOL, $content, FILE_APPEND);
+			file_put_contents(LOG_FILE, $content, FILE_APPEND);
 		} else {
 			return FALSE;
 		}
