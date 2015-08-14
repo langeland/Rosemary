@@ -5,7 +5,7 @@ namespace Rosemary\Service;
 use Rosemary\Exception\NoDatabaseNameException;
 use Symfony\Component\Yaml\Exception\ParseException;
 
-class InstallFlowService extends Service {
+class InstallFlowService extends AbstractInstallService {
 
 	public function install($installationConfiguration) {
 		$this->installationConfiguration = $installationConfiguration;

@@ -2,7 +2,7 @@
 
 namespace Rosemary\Service;
 
-class InstallEmptyService extends Service {
+class InstallEmptyService extends AbstractInstallService {
 
 	public function install($installationConfiguration) {
 		try {
