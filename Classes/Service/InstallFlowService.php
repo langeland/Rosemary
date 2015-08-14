@@ -98,59 +98,35 @@ class InstallFlowService {
 	}
 
 	private function task_createDatabase() {
-		try {
-			$databaseConfig = \Rosemary\Utility\General::getDatabaseConfiguration($this->installationConfiguration['name']);
-		} catch (\Rosemary\Exception\NoDatabaseNameException $e) {
-			$databaseConfig = array(
-				'dbname' => $this->installationConfiguration['name'],
-				'user' => 'root'
-			);
-		}
 		$command = vsprintf(
 			'mysql -h %s -u %s %s -e "DROP DATABASE IF EXISTS \`%s\`; CREATE DATABASE \`%s\` DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;"',
 			array(
 				$this->configuration['database_root']['host'],
 				$this->configuration['database_root']['username'],
 				($this->configuration['database_root']['password'] != '') ? '-p' . $this->configuration['database_root']['password'] : '',
-				$databaseConfig['dbname'],
-				$databaseConfig['dbname']
+				$this->installationConfiguration['name'],
+				$this->installationConfiguration['name']
 			)
 		);
-		$this->output->writeln('Create database: ' . $databaseConfig['dbname']);
+		$this->output->writeln('Create database: ' . $this->installationConfiguration['name']);
 		\Rosemary\Utility\General::runCommand($this->output, $command);
-
-		$dbUser = array_key_exists('user', $databaseConfig) ? $databaseConfig['user'] : 'root';
-		$dbPassword = array_key_exists('password', $databaseConfig) ? $databaseConfig['password'] : '';
-		if ($dbUser !== 'root') {
-			$command = sprintf('mysql -h %s -u %s %s -e "GRANT ALL ON \`%s\`.* to \'%s\'@\'localhost\' identified by \'%s\'"',
-				$this->configuration['database_root']['host'],
-				$this->configuration['database_root']['username'],
-				($this->configuration['database_root']['password'] != '') ? '-p' . $this->configuration['database_root']['password'] : '',
-				$databaseConfig['dbname'],
-				$dbUser,
-				$dbPassword
-			);
-
-			$this->output->writeln('Create database user: ' . $dbUser);
-			\Rosemary\Utility\General::runCommand($this->output, $command);
-		}
-
-		return;
 	}
 
 	private function task_updateSettings() {
-		if (file_exists($this->configuration['locations']['document_root'] . '/' . $this->installationConfiguration['name'] . '/flow/Configuration/Development/Settings.yaml')) {
-			$this->output->writeln('Configuration/Development/Settings.yaml exists');
-		} else {
-			$this->output->writeln('Creating Configuration/Settings.yaml');
-			$settingsYamlTemplate = new \Rosemary\Service\Template(\Rosemary\Utility\General::getResourcePathAndName('SettingsYaml.template'));
-			$settingsYamlTemplate->setVar('host', $this->configuration['database']['host']);
-			$settingsYamlTemplate->setVar('user', $this->configuration['database']['username']);
-			$settingsYamlTemplate->setVar('password', $this->configuration['database']['password']);
-			$settingsYamlTemplate->setVar('dbname', sprintf($this->configuration['database']['database'], strtolower($this->installationName)));
-			$fileContent = $settingsYamlTemplate->render();
-			file_put_contents($this->configuration['locations']['document_root'] . '/' . $this->installationConfiguration['name'] . '/flow/Configuration/Settings.yaml', $fileContent);
+		$configurationDirectory = $this->configuration['locations']['document_root'] . '/' . $this->installationConfiguration['name'] . '/flow/Configuration/Development/Vagrant/';
+
+		if (!mkdir($configurationDirectory, 0777)) {
+			throw new \Exception('Failed to create folder: ' . $configurationDirectory);
 		}
+
+		$this->output->writeln('Creating Configuration/Development/Vagrant/Settings.yaml');
+		$settingsYamlTemplate = new \Rosemary\Service\Template(\Rosemary\Utility\General::getResourcePathAndName('SettingsYaml.template'));
+		$settingsYamlTemplate->setVar('host', $this->configuration['database']['host']);
+		$settingsYamlTemplate->setVar('user', $this->configuration['database']['username']);
+		$settingsYamlTemplate->setVar('password', $this->configuration['database']['password']);
+		$settingsYamlTemplate->setVar('dbname', sprintf($this->configuration['database']['database'], $this->installationConfiguration));
+		$fileContent = $settingsYamlTemplate->render();
+		file_put_contents($this->configuration['locations']['document_root'] . '/' . $this->installationConfiguration['name'] . '/flow/Configuration/Development/Vagrant/Settings.yaml', $fileContent);
 	}
 
 	private function task_setfilepermissions() {
@@ -167,10 +143,10 @@ class InstallFlowService {
 	}
 
 	private function task_createVhost() {
-		$virtualHostTemplate = new \Rosemary\Service\Template(\Rosemary\Utility\General::getResourcePathAndName('VirtualHost.template'));
+		$virtualHostTemplate = new \Rosemary\Service\Template(\Rosemary\Utility\General::getResourcePathAndName('VirtualHostFlow.template'));
 		$virtualHostTemplate->setVar('installationName', $this->installationConfiguration['name']);
 		$virtualHostTemplate->setVar('documentRoot', $this->configuration['locations']['document_root']);
-		$virtualHostTemplate->setVar('flowDir', 'flow');
+		$virtualHostTemplate->setVar('hostname', gethostname());
 		$fileContent = $virtualHostTemplate->render();
 
 		$file = tempnam('/tmp', 'rosemary');
@@ -200,6 +176,7 @@ class InstallFlowService {
 
 	private function task_executePostCreateCommands() {
 		if ($this->installationConfiguration['seed'] !== NULL) {
+			// TODO: Use getSeed()
 			foreach (\Rosemary\Utility\General::getSeeds() as $siteSeed => $seedConfiguration) {
 				if ($siteSeed === $this->installationConfiguration['seed']) {
 					break;

@@ -1,0 +1,22 @@
+<VirtualHost *:8081>
+	ServerName {installationName}.dev
+	ServerAlias = {installationName}.{hostname}.dev
+	ServerAlias = *.{installationName}.{hostname}.dev
+	ServerAlias = *.{installationName}.dev
+
+	## Vhost docroot
+	DocumentRoot "{documentRoot}/{installationName}/flow/Web"
+
+	<Directory "{documentRoot}/{installationName}/flow/Web">
+		AllowOverride All
+		Order allow,deny
+		Allow from all
+	</Directory>
+
+	SetEnv FLOW_CONTEXT Development/Vagrant
+
+	## Logging
+	ErrorLog "{documentRoot}/{installationName}/logs/error.log"
+	ServerSignature Off
+	CustomLog "{documentRoot}/{installationName}/logs/access.log" combined
+</VirtualHost>
