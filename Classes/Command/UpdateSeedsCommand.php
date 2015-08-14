@@ -16,20 +16,20 @@ class UpdateSeedsCommand extends \Rosemary\Command\AbstractCommand {
 		$this->input = $input;
 		$this->output = $output;
 
-		$this->outputLine('Updating seeds');
+		$this->output->writeln('Updating seeds');
 
 		if(!is_dir($_SERVER['HOME'] . '/.rosemary')){
 			if (!mkdir($_SERVER['HOME'] . '/.rosemary', 0777)) {
-				$this->outputLine('Failed to create folders... ' . $_SERVER['HOME'] . '/.rosemary');
-				$this->quit(1);
+				$this->output->writeln('Failed to create folders... ' . $_SERVER['HOME'] . '/.rosemary');
+				die(1);
 			}
 		}
 
-		$source = 'rsync@moc-files:/volume1/developer/Seeds.yaml';
-		$destination = $_SERVER['HOME'] . '/.rosemary/Seeds.yaml';
+		$source = 'rsync@moc-files:/volume1/developer/Seeds2.yaml';
+		$destination = $_SERVER['HOME'] . '/.rosemary/Seeds2.yaml';
 		$cmd = sprintf('scp %s %s', $source, $destination);
-		$this->outputLine($cmd);
-		$this->runCommand($cmd);
+		$this->output->writeln($cmd);
+		\Rosemary\Utility\General::runCommand($this->output, $cmd);
 	}
 
 	/*******************************************************************************************************************
