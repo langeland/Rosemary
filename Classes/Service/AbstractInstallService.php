@@ -3,7 +3,7 @@
 namespace Rosemary\Service;
 
 
-abstract class Service {
+abstract class AbstractInstallService {
 	/**
 	 * @var \Symfony\Component\Console\Input\InputInterface
 	 */
