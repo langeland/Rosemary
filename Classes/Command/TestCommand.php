@@ -4,10 +4,6 @@ namespace Rosemary\Command;
 
 class TestCommand extends \Rosemary\Command\AbstractCommand {
 
-	public function __construct() {
-		parent::__construct();
-	}
-
 	protected function configure() {
 		$this
 			->setName('test')

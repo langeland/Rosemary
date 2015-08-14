@@ -161,7 +161,7 @@ class InstallCommand extends \Rosemary\Command\AbstractCommand {
 		 ******************************************************************************************************************/
 		if ($this->installationType === NULL) {
 
-			if ($this->installationSeed !== NULL && $this->installationSeedConfiguration['type'] !== NULL) {
+			if ($this->installationSeed !== NULL && isset($this->installationSeedConfiguration['type'])) {
 				$this->installationType = $this->installationSeedConfiguration['type'];
 			} else {
 				$helper = $this->getHelper('question');
