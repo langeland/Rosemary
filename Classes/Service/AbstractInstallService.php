@@ -16,13 +16,25 @@ abstract class AbstractInstallService {
 
 	protected $configuration;
 
+	protected $installationConfiguration = array();
+
 	function __construct(\Symfony\Component\Console\Input\InputInterface $input, \Symfony\Component\Console\Output\OutputInterface $output) {
 		$this->input = $input;
 		$this->output = $output;
 		$this->configuration = \Rosemary\Utility\General::getConfiguration();
 	}
 
-	protected function task_createDirectories() {
+	protected function task_installVhostAndRestartApache() {
+		$command = vsprintf('sudo a2ensite %s', $this->installationConfiguration['name']);
+		$this->output->writeln('  - Install vhost');
+		\Rosemary\Utility\General::runCommand($this->output, $command);
+
+		$command = 'sudo apache2ctl graceful';
+		$this->output->writeln('  - Restart apache');
+		\Rosemary\Utility\General::runCommand($this->output, $command);
+	}
+
+	protected function task_createDirectories($addDocsDirectory = FALSE) {
 		$installDirectory = $this->configuration['locations']['document_root'] . '/' . $this->installationConfiguration['name'] . '/';
 
 		$this->output->writeln(vsprintf('Creating directory structure at: %s', array($installDirectory)));
@@ -38,6 +50,12 @@ abstract class AbstractInstallService {
 		if (!mkdir($installDirectory . 'sync/', 0777, TRUE)) {
 			throw new \Exception('Failed to create folder: ' . $installDirectory . 'sync/');
 		}
+
+		if ($addDocsDirectory) {
+			if (!mkdir($installDirectory . 'docs/', 0777, TRUE)) {
+				throw new \Exception('Failed to create folder: ' . $installDirectory . 'sync/');
+			}
+		}
 	}
 
 	protected function task_createDatabase() {
@@ -52,16 +70,6 @@ abstract class AbstractInstallService {
 			)
 		);
 		$this->output->writeln('Create database: ' . $this->installationConfiguration['name']);
-		\Rosemary\Utility\General::runCommand($this->output, $command);
-	}
-
-	protected function task_installVhostAndRestartApache() {
-		$command = vsprintf('sudo a2ensite %s', $this->installationConfiguration['name']);
-		$this->output->writeln('  - Install vhost');
-		\Rosemary\Utility\General::runCommand($this->output, $command);
-
-		$command = 'sudo apache2ctl graceful';
-		$this->output->writeln('  - Restart apache');
 		\Rosemary\Utility\General::runCommand($this->output, $command);
 	}
 

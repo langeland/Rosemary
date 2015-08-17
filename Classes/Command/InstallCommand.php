@@ -27,7 +27,8 @@ class InstallCommand extends \Rosemary\Command\AbstractCommand {
 			->setDescription('Create blank project')
 			->setHelp(file_get_contents(ROOT_DIR . '/Resources/InstallCommandHelp.text'))
 			->addArgument('source', \Symfony\Component\Console\Input\InputArgument::REQUIRED, 'Set the source of the installation. Can be a site seed, a packagist package "vendor/package" or a git reposirory "git@github.com:user/vendor-package.git"')
-			->addArgument('name', \Symfony\Component\Console\Input\InputArgument::OPTIONAL, 'Set the name of the installation. If no name is given, then the seed is used');
+			->addArgument('name', \Symfony\Component\Console\Input\InputArgument::OPTIONAL, 'Set the name of the installation. If no name is given, then the seed is used')
+			->addOption('empty', null, \Symfony\Component\Console\Input\InputOption::VALUE_NONE, 'Set to create an empty site');
 	}
 
 	/**
@@ -95,10 +96,10 @@ class InstallCommand extends \Rosemary\Command\AbstractCommand {
 			 *
 			 ******************************************************************************************************************/
 			$helper = $this->getHelper('question');
-			$question = new \Symfony\Component\Console\Question\ConfirmationQuestion('Install ?? [Y/n] ', TRUE);
+			$question = new \Symfony\Component\Console\Question\ConfirmationQuestion('Continue installation? [Y/n] ', TRUE);
 
 			if (!$helper->ask($input, $output, $question)) {
-				$output->writeln('No ?? ');
+				$output->writeln('The installation was cancelled.');
 				return;
 			}
 
@@ -111,6 +112,9 @@ class InstallCommand extends \Rosemary\Command\AbstractCommand {
 				$installer->install($installationConfiguration);
 			} elseif ($this->installationType === 'cms') {
 				$installer = new \Rosemary\Service\InstallCmsService($input, $output);
+				$installer->install($installationConfiguration);
+			} elseif ($this->installationType === 'empty') {
+				$installer = new \Rosemary\Service\InstallEmptyService($input, $output);
 				$installer->install($installationConfiguration);
 			} else {
 				throw new \Exception('installationType is not valid');
@@ -133,6 +137,8 @@ class InstallCommand extends \Rosemary\Command\AbstractCommand {
 			$this->installationSource = $seedConfiguration['source'];
 			$this->installationSeed = $this->input->getArgument('source');
 			$this->installationSeedConfiguration = $seedConfiguration;
+		} elseif ($this->input->getOption('empty')) {
+			$this->installationSource = '';
 		} else {
 			$this->installationSource = $this->input->getArgument('source');
 		}
@@ -141,6 +147,8 @@ class InstallCommand extends \Rosemary\Command\AbstractCommand {
 			$this->installationInstaller = 'composer';
 		} elseif (preg_match('*([A-Za-z0-9]+@|http(|s)\:\/\/)([A-Za-z0-9.]+)(:|/)([A-Za-z0-9\/]+)(\.git)?*', $this->installationSource)) {
 			$this->installationInstaller = 'git';
+		} elseif ($this->input->getOption('empty')) {
+			$this->installationInstaller = 'none';
 		} else {
 			throw new \Exception('Source is not a valid seed, git repository or Packagist package');
 		}
@@ -150,10 +158,10 @@ class InstallCommand extends \Rosemary\Command\AbstractCommand {
 		 ******************************************************************************************************************/
 		if ($this->input->getArgument('name') != '') {
 			$this->installationName = strtolower(preg_replace("/[^a-zA-Z0-9]+/", "", $this->input->getArgument('name')));
-		} elseif (!is_null($this->installationSeed)) {
+		} elseif (!is_null($this->installationSeed) || $this->input->getOption('empty')) {
 			$this->installationName = strtolower(preg_replace("/[^a-zA-Z0-9]+/", "", $this->input->getArgument('source')));
 		} else {
-			throw new \Exception('Cannot determin a installation name');
+			throw new \Exception('Cannot determine a installation name');
 		}
 
 		/*******************************************************************************************************************
@@ -163,6 +171,8 @@ class InstallCommand extends \Rosemary\Command\AbstractCommand {
 
 			if ($this->installationSeed !== NULL && isset($this->installationSeedConfiguration['type'])) {
 				$this->installationType = $this->installationSeedConfiguration['type'];
+			} elseif ($this->input->getOption('empty')) {
+				$this->installationType = 'empty';
 			} else {
 				$helper = $this->getHelper('question');
 				$question = new \Symfony\Component\Console\Question\ChoiceQuestion(
