@@ -22,16 +22,6 @@ abstract class AbstractInstallService {
 		$this->configuration = \Rosemary\Utility\General::getConfiguration();
 	}
 
-	protected function task_installVhostAndRestartApache() {
-		$command = vsprintf('sudo a2ensite %s', $this->installationConfiguration['name']);
-		$this->output->writeln('  - Install vhost');
-		\Rosemary\Utility\General::runCommand($this->output, $command);
-
-		$command = 'sudo apache2ctl graceful';
-		$this->output->writeln('  - Restart apache');
-		\Rosemary\Utility\General::runCommand($this->output, $command);
-	}
-
 	protected function task_createDirectories() {
 		$installDirectory = $this->configuration['locations']['document_root'] . '/' . $this->installationConfiguration['name'] . '/';
 
@@ -48,6 +38,31 @@ abstract class AbstractInstallService {
 		if (!mkdir($installDirectory . 'sync/', 0777, TRUE)) {
 			throw new \Exception('Failed to create folder: ' . $installDirectory . 'sync/');
 		}
+	}
+
+	protected function task_createDatabase() {
+		$command = vsprintf(
+			'mysql -h %s -u %s %s -e "DROP DATABASE IF EXISTS \`%s\`; CREATE DATABASE \`%s\` DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;"',
+			array(
+				$this->configuration['database_root']['host'],
+				$this->configuration['database_root']['username'],
+				($this->configuration['database_root']['password'] != '') ? '-p' . $this->configuration['database_root']['password'] : '',
+				$this->installationConfiguration['name'],
+				$this->installationConfiguration['name']
+			)
+		);
+		$this->output->writeln('Create database: ' . $this->installationConfiguration['name']);
+		\Rosemary\Utility\General::runCommand($this->output, $command);
+	}
+
+	protected function task_installVhostAndRestartApache() {
+		$command = vsprintf('sudo a2ensite %s', $this->installationConfiguration['name']);
+		$this->output->writeln('  - Install vhost');
+		\Rosemary\Utility\General::runCommand($this->output, $command);
+
+		$command = 'sudo apache2ctl graceful';
+		$this->output->writeln('  - Restart apache');
+		\Rosemary\Utility\General::runCommand($this->output, $command);
 	}
 
 	protected function task_executePostCreateCommands() {
