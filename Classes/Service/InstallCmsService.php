@@ -2,7 +2,7 @@
 
 namespace Rosemary\Service;
 
-class InstallCmsService {
+class InstallCmsService extends AbstractInstallService {
 
 	/**
 	 * @var \Symfony\Component\Console\Input\InputInterface
@@ -48,12 +48,16 @@ class InstallCmsService {
 			// Syncing datafiles into $SITEPATH
 			$this->task_syncingDatafiles();
 
-//			// Updating source symlink
-//			// Updating LocalConfiguration.php
-//			// Linking typo3 src
-//			// Creating typo3temp directory
-//
-//			$this->task_executePostCreateCommands();
+			// Updating source symlink
+			$this->task_sourceSymlink();
+
+			// Updating LocalConfiguration.php
+			$this->task_updateLocalConfiguration();
+
+			// Linking typo3 src
+			// Creating typo3temp directory
+
+			$this->task_executePostCreateCommands();
 
 		} catch (\Exception $e) {
 			die('It all stops here: ' . $e->getMessage());
@@ -64,7 +68,7 @@ class InstallCmsService {
 	 *
 	 ******************************************************************************************************************/
 
-	private function task_createDirectories() {
+	protected function task_createDirectories() {
 		$installDirectory = $this->configuration['locations']['document_root'] . '/' . $this->installationConfiguration['name'] . '/';
 
 		$this->output->writeln(vsprintf('Creating directory structure at: %s', array($installDirectory)));
@@ -74,6 +78,10 @@ class InstallCmsService {
 		}
 
 		if (!mkdir($installDirectory . 'docs/', 0777, TRUE)) {
+			throw new \Exception('Failed to create folder: ' . $installDirectory . 'docs/');
+		}
+
+		if (!mkdir($installDirectory . 'typo3temp/', 0777, TRUE)) {
 			throw new \Exception('Failed to create folder: ' . $installDirectory . 'docs/');
 		}
 
@@ -128,11 +136,16 @@ class InstallCmsService {
 		\Rosemary\Utility\General::runCommand($this->output, $command, 'Cloning versioned folder');
 
 		chdir($installDirectory . '/versioned/');
-		$command = 'git submodule init';
-		\Rosemary\Utility\General::runCommand($this->output, $command);
 
-		$command = 'git submodule update';
-		\Rosemary\Utility\General::runCommand($this->output, $command);
+		try {
+			$command = 'git submodule init';
+			\Rosemary\Utility\General::runCommand($this->output, $command);
+			$command = 'git submodule update';
+			\Rosemary\Utility\General::runCommand($this->output, $command);
+		} catch (\RuntimeException $e) {
+			$this->output->writeln('<error>Submodule initialization failure</error>');
+			$this->output->writeln('<error>' . $e->getMessage() . '</error>');
+		}
 
 		$command = 'gerrit';
 		\Rosemary\Utility\General::runCommand($this->output, $command);
@@ -160,19 +173,47 @@ class InstallCmsService {
 		\Rosemary\Utility\General::runCommand($this->output, $command);
 	}
 
-	private function task_installVhostAndRestartApache() {
-		$command = vsprintf('sudo a2ensite %s', $this->installationConfiguration['name']);
-		$this->output->writeln('  - Install vhost');
-		\Rosemary\Utility\General::runCommand($this->output, $command);
-
-		$command = 'sudo apache2ctl graceful';
-		$this->output->writeln('  - Restart apache');
-		\Rosemary\Utility\General::runCommand($this->output, $command);
+	private function task_syncingDatafiles() {
+		$installDirectory = $this->configuration['locations']['document_root'] . '/' . $this->installationConfiguration['name'] . '/';
+		chdir($installDirectory);
+		$cmd = vsprintf('rsync -av --delete %sdocs %s', array(
+			$this->seedConfiguration['datasource'],
+			$installDirectory
+		));
+		\Rosemary\Utility\General::runCommand($this->output, $cmd, 'Synchronize Resources');
 	}
 
-	private function task_syncingDatafiles(){
-//		cd $SITEPATH
-//		rsync -a --progress --inplace $DATADIRECTORY_PATH $SITEPATH
+	private function task_sourceSymlink() {
+		$installDirectory = $this->configuration['locations']['document_root'] . '/' . $this->installationConfiguration['name'] . '/';
+		$this->output->writeln('Updating TYPO3 source symlink');
+
+		if (!unlink($installDirectory . 'docs/typo3_src')) {
+			throw new \Exception('Unable to delete typo3_src symlink ');
+		}
+
+		if (!symlink($installDirectory . 'typo3_sources/typo3_src-git', $installDirectory . 'docs/typo3_src')) {
+			throw new \Exception('Unable to create typo3_src symlink ');
+		}
+	}
+
+	private function task_updateLocalConfiguration() {
+		$localConfigurationFile = $this->configuration['locations']['document_root'] . '/' . $this->installationConfiguration['name'] . '/docs/typo3conf/LocalConfiguration.php';
+
+		$localConfiguration = include($localConfigurationFile);
+		$localConfiguration['DB']['host'] = $this->configuration['database_root']['host'];
+		$localConfiguration['DB']['username'] = $this->configuration['database_root']['username'];
+		$localConfiguration['DB']['password'] = ($this->configuration['database_root']['password'] != '') ? '-p' . $this->configuration['database_root']['password'] : '';
+		$localConfiguration['DB']['database'] = $this->installationConfiguration['name'];
+
+		$localConfiguration['SYS']['sitename'] = $localConfiguration['SYS']['sitename'] . ' - [Vagrant]';
+
+		$localConfigurationData = '<?php' . PHP_EOL .
+			'return ' .
+			var_export($localConfiguration, 1) .
+			';' . PHP_EOL .
+			'?>';
+		// TODO: Add check if file was writen
+		file_put_contents($localConfigurationFile, $localConfigurationData);
 	}
 
 }
