@@ -1,0 +1,17 @@
+<VirtualHost *:8081>
+	ServerName {installationName}.dev
+
+	## Vhost docroot
+	DocumentRoot "{documentRoot}/{installationName}/{htdocs}"
+
+	<Directory "{documentRoot}/{installationName}/{htdocs}">
+		AllowOverride All
+		Order allow,deny
+		Allow from all
+	</Directory>
+
+	## Logging
+	ErrorLog "{documentRoot}/{installationName}/logs/error.log"
+	ServerSignature Off
+	CustomLog "{documentRoot}/{installationName}/logs/access.log" combined
+</VirtualHost>
