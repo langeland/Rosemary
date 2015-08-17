@@ -37,9 +37,18 @@ class ListSeedsCommand extends \Rosemary\Command\AbstractCommand {
 		$seeds = General::getSeeds();
 		ksort($seeds);
 		foreach ($seeds as $seed => $seedConfiguration) {
-			$table->addRow(array($seed, $seedConfiguration['description'], @$seedConfiguration['type']));
+			if ($seedConfiguration['type'] == 'cms') {
+				$typeField = 'CMS';
+				if ($seedConfiguration['version']) {
+					$typeField .= ' (' . $seedConfiguration['version'] . ')';
+				}
+			} elseif ($seedConfiguration['type'] == 'flow') {
+				$typeField = 'Flow/NEOS';
+			} else {
+				$typeField = 'N/A';
+			}
+			$table->addRow(array($seed, $seedConfiguration['description'], $typeField));
 		}
 		$table->render();
 	}
-
 }
