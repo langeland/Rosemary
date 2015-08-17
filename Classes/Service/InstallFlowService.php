@@ -83,7 +83,7 @@ class InstallFlowService extends AbstractInstallService {
 		$settingsYamlTemplate->setVar('host', $this->configuration['database']['host']);
 		$settingsYamlTemplate->setVar('user', $this->configuration['database']['username']);
 		$settingsYamlTemplate->setVar('password', $this->configuration['database']['password']);
-		$settingsYamlTemplate->setVar('dbname', sprintf($this->configuration['database']['database'], $this->installationConfiguration));
+		$settingsYamlTemplate->setVar('dbname', sprintf($this->configuration['database']['database'], $this->installationConfiguration['name']));
 		$fileContent = $settingsYamlTemplate->render();
 		file_put_contents($this->configuration['locations']['document_root'] . '/' . $this->installationConfiguration['name'] . '/flow/Configuration/Development/Vagrant/Settings.yaml', $fileContent);
 	}
