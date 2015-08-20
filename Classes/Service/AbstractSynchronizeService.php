@@ -62,14 +62,16 @@ abstract class AbstractSynchronizeService {
 		));
 
 		\Rosemary\Utility\General::runCommand($this->output, $concatenateDumpsCmd, 'Merging database dumps');
+	}
 
-		// Remove merged dumps
-		$removeMergedDumpsCmd = vsprintf('find %s/%s/db-dumps/ -type f -not -name \'database_merged.sql\' -delete', array(
+	protected function task_removeMergedDump() {
+		// Remove merged dump
+		$removeMergedDumpsCmd = vsprintf('rm %s/%s/db-dumps/database_merged.sql', array(
 			$this->configuration['locations']['document_root'],
 			$this->installationName
 		));
 
-		\Rosemary\Utility\General::runCommand($this->output, $removeMergedDumpsCmd, 'Removing merged dumps');
+		\Rosemary\Utility\General::runCommand($this->output, $removeMergedDumpsCmd, 'Removing merged dump');
 	}
 
 	protected function task_importDatabase() {
@@ -100,6 +102,8 @@ abstract class AbstractSynchronizeService {
 		);
 
 		\Rosemary\Utility\General::runCommand($this->output, $cmd, 'Loading databasedump');
+
+		$this->task_removeMergedDump();
 	}
 
 
