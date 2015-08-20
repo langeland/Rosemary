@@ -2,30 +2,26 @@
 
 namespace Rosemary\Service;
 
-class SynchronizeCmsService {
+class SynchronizeCmsService extends AbstractSynchronizeService {
 
-	/**
-	 * @var \Symfony\Component\Console\Input\InputInterface
-	 */
-	protected $input;
 
-	/**
-	 * @var \Symfony\Component\Console\Output\OutputInterface
-	 */
-	protected $output;
+	protected function task_syncronizeFiles() {
 
-	protected $configuration;
+		$cmd = vsprintf('rsync -av --delete %sdocs/fileadmin/ %s/%s/docs/fileadmin/', array(
+			$this->seed['datasource'],
+			$this->configuration['locations']['document_root'],
+			$this->installationName
+		));
 
-	protected $installationConfiguration = array();
+		\Rosemary\Utility\General::runCommand($this->output, $cmd, 'Synchronizing fileadmin directory');
 
-	function __construct(\Symfony\Component\Console\Input\InputInterface $input, \Symfony\Component\Console\Output\OutputInterface $output) {
-		$this->input = $input;
-		$this->output = $output;
-		$this->configuration = \Rosemary\Utility\General::getConfiguration();
-	}
+		$cmd = vsprintf('rsync -av --delete %sdocs/uploads/ %s/%s/docs/uploads/', array(
+			$this->seed['datasource'],
+			$this->configuration['locations']['document_root'],
+			$this->installationName
+		));
 
-	public function synchronize() {
-
+		\Rosemary\Utility\General::runCommand($this->output, $cmd, 'Synchronizing uploads directory');
 	}
 
 }
