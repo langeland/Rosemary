@@ -46,7 +46,7 @@ class SynchronizeCommand extends \Rosemary\Command\AbstractCommand {
 			print_r($seed);
 
 			$output->writeln('INSTALLATION NAME');
-			print_r($installationName);
+			$output->writeln($installationName);
 
 			/*******************************************************************************************************************
 			 * Do the stuff
