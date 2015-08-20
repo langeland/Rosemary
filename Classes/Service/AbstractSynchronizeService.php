@@ -73,7 +73,6 @@ abstract class AbstractSynchronizeService {
 	}
 
 	protected function task_importDatabase() {
-		$databaseName = \Rosemary\Utility\General::getDatabasename($this->installationName);
 
 		$cmd = vsprintf(
 			'mysql -h %s -u %s %s -e "DROP DATABASE IF EXISTS %s; CREATE DATABASE %s DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;"',
@@ -81,8 +80,8 @@ abstract class AbstractSynchronizeService {
 				$this->configuration['database_root']['host'],
 				$this->configuration['database_root']['username'],
 				($this->configuration['database_root']['password'] != '') ? '-p' . $this->configuration['database_root']['password'] : '',
-				$databaseName,
-				$databaseName
+				$this->installationName,
+				$this->installationName
 			)
 		);
 
@@ -94,7 +93,7 @@ abstract class AbstractSynchronizeService {
 				$this->configuration['database_root']['host'],
 				$this->configuration['database_root']['username'],
 				($this->configuration['database_root']['password'] != '') ? '-p' . $this->configuration['database_root']['password'] : '',
-				$databaseName,
+				$this->installationName,
 				$this->configuration['locations']['document_root'],
 				$this->installationName
 			)
