@@ -10,6 +10,7 @@ class InstallEmptyService extends AbstractInstallService {
 		try {
 			$this->output->writeln('InstallEmptyService');
 			$this->task_createDirectories(TRUE);
+			$this->task_createDatabase();
 			$this->task_createVhost();
 			$this->task_installVhostAndRestartApache();
 		} catch (\Exception $e) {
