@@ -1,5 +1,8 @@
 <VirtualHost *:8081>
 	ServerName {installationName}.dev
+	ServerAlias = {installationName}.{hostname}.dev
+	ServerAlias = *.{installationName}.{hostname}.dev
+	ServerAlias = *.{installationName}.dev
 
 	## Vhost docroot
 	DocumentRoot "{documentRoot}/{installationName}/{htdocs}"
