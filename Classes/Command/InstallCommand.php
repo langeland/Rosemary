@@ -177,7 +177,7 @@ class InstallCommand extends \Rosemary\Command\AbstractCommand {
 				$helper = $this->getHelper('question');
 				$question = new \Symfony\Component\Console\Question\ChoiceQuestion(
 					'Please select inatallation type (defaults to empty)',
-					array('empty', 'cms', 'flow/neos'),
+					array('empty', 'cms', 'flow'),
 					'0'
 				);
 				$question->setErrorMessage('That\'s not an answer.');
