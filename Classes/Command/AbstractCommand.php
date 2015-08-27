@@ -29,4 +29,17 @@ class AbstractCommand extends \Symfony\Component\Console\Command\Command {
 		}
 	}
 
+	/**
+	 *
+	 */
+	protected function configure() {
+		$reflect = new \ReflectionClass($this);
+		$this->setHelp(
+			wordwrap(
+				file_get_contents(ROOT_DIR . '/Resources/Help' . ucfirst($reflect->getShortName()) . '.text'),
+				80
+			)
+		);
+	}
+
 }

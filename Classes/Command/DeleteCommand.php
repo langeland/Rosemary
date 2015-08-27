@@ -10,6 +10,7 @@ class DeleteCommand extends \Rosemary\Command\AbstractCommand {
 
 
 	protected function configure() {
+		parent::configure();
 		$this
 			->setName('delete')
 			->setDescription('Delete an existing project')

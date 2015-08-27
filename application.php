@@ -20,10 +20,9 @@ if (is_dir(__DIR__ . '/.git')) {
 
 $application = new \Symfony\Component\Console\Application('Rosemary', $version);
 $application->add(new Rosemary\Command\InstallCommand());
-//$application->add(new Rosemary\Command\InstallEmptyCommand());
 $application->add(new Rosemary\Command\SynchronizeCommand());
-$application->add(new Rosemary\Command\ListSeedsCommand());
-$application->add(new Rosemary\Command\UpdateSeedsCommand());
+$application->add(new Rosemary\Command\SeedCommand());
+//$application->add(new Rosemary\Command\ListSeedsCommand());
+//$application->add(new Rosemary\Command\UpdateSeedsCommand());
 $application->add(new Rosemary\Command\DeleteCommand());
-$application->add(new Rosemary\Command\TestCommand());
 $application->run();

@@ -5,10 +5,10 @@ namespace Rosemary\Command;
 class SynchronizeCommand extends \Rosemary\Command\AbstractCommand {
 
 	protected function configure() {
+		parent::configure();
 		$this
 			->setName('sync')
 			->setDescription('Synchronize data from moc-files to local project')
-			->setHelp(file_get_contents(ROOT_DIR . '/Resources/SynchronizeCommandHelp.text'))
 			->addArgument('seedName', \Symfony\Component\Console\Input\InputArgument::REQUIRED, 'Set the site seed. See available seeds with rosemary list-seeds')
 			->addArgument('installationName', \Symfony\Component\Console\Input\InputArgument::OPTIONAL, 'Set the name of the installation. If not given, the seed is used');
 	}
@@ -30,9 +30,9 @@ class SynchronizeCommand extends \Rosemary\Command\AbstractCommand {
 			 * Validating installation name
 			 ******************************************************************************************************************/
 			if ($input->getArgument('installationName') != '') {
-				$installationName = strtolower($input->getArgument('installationName'));
+				$installationName = strtolower(preg_replace("/[^a-zA-Z0-9]+/", "", $this->input->getArgument('installationName')));;
 			} else {
-				$installationName = strtolower($input->getArgument('seedName'));
+				$installationName = strtolower(preg_replace("/[^a-zA-Z0-9]+/", "", $this->input->getArgument('seedName')));;
 			}
 
 			if (!is_dir($this->configuration['locations']['document_root'] . '/' . $installationName)) {

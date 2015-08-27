@@ -1,0 +1,39 @@
+This script should NOT be run as root, but as vagrant
+
+It can handle both TYPO3 CMS installations and Flw/NEOS installations, as well as creating empty installations.
+
+Whene installing Flw/NEOS it will run in a context called 'Development/Vagrant', it will create the corosponding directories and settings files.
+
+Whene installing TYPO3 CMS it will update the LocalConfiguration.php file. Note that it is only posible to handte TYPO3 CMS in version 6.0 and up.
+
+The command must be given one or two parameters, the first can be either an seed of sites, a packagist distribution or a giturl. If only one parameter is given the installation will named acording to this.
+
+If a second parameter is given, then this will be used as the installation name.
+
+Empty installations are created by adding an --empty option. In this case the first parameter will be used as the installation name.
+
+A list of available seeds can be found with rosemary list-seeds.
+
+After installing you will need to add appropriate hostnames to your local hostfile. The following serveraliases is avalible:
+
+ServerName {installationName}.dev
+ServerAlias = {installationName}.{hostname}.dev
+ServerAlias = *.{installationName}.{hostname}.dev
+ServerAlias = *.{installationName}.dev
+
+<comment>Examples:</comment>
+From MOC Seed
+<info>rosemary install seed sitename</info>
+
+From Packagist
+<info>rosemary install typo3/flow-base-distribution sitename</info>
+
+From Git
+<info>rosemary install git@github.com:langeland/neos-base-distribution.git sitename</info>
+
+<info>rosemary install git@github.com:UserName/Example.git sitename</info>
+<info>rosemary install https://UserName@github.com/UserName/Example.git sitename</info>
+<info>rosemary install  git://github.com/UserName/Example.git sitename</info>
+
+Empty installation
+<info>rosemary install --empty sitename</info>

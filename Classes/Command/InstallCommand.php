@@ -22,10 +22,10 @@ class InstallCommand extends \Rosemary\Command\AbstractCommand {
 	 * @return null
 	 */
 	protected function configure() {
+		parent::configure();
 		$this
 			->setName('install')
 			->setDescription('Create blank project')
-			->setHelp(file_get_contents(ROOT_DIR . '/Resources/InstallCommandHelp.text'))
 			->addArgument('source', \Symfony\Component\Console\Input\InputArgument::REQUIRED, 'Set the source of the installation. Can be a site seed, a packagist package "vendor/package" or a git reposirory "git@github.com:user/vendor-package.git"')
 			->addArgument('name', \Symfony\Component\Console\Input\InputArgument::OPTIONAL, 'Set the name of the installation. If no name is given, then the seed is used')
 			->addOption('empty', null, \Symfony\Component\Console\Input\InputOption::VALUE_NONE, 'Set to create an empty site');
@@ -113,6 +113,12 @@ class InstallCommand extends \Rosemary\Command\AbstractCommand {
 			} elseif ($this->installationType === 'cms') {
 				$installer = new \Rosemary\Service\InstallCmsService($input, $output);
 				$installer->install($installationConfiguration);
+
+				if (array_key_exists('datasource', $this->installationSeedConfiguration) && $this->installationSeedConfiguration['datasource'] != '') {
+					$synchronizer = new \Rosemary\Service\SynchronizeCmsService($input, $output);
+					$synchronizer->synchronize($this->installationSeedConfiguration, $this->installationName);
+				}
+
 			} elseif ($this->installationType === 'empty') {
 				$installer = new \Rosemary\Service\InstallEmptyService($input, $output);
 				$installer->install($installationConfiguration);
