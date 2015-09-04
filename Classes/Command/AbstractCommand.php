@@ -22,9 +22,12 @@ class AbstractCommand extends \Symfony\Component\Console\Command\Command {
 
 		if (!defined('LOG_FILE')) {
 			if ($this->configuration['locations']['log_dir']) {
-				// TODO: Add command name to logfile name. Issue #17605
-				$command = $_SERVER["argv"][1];
-				define('LOG_FILE', $this->configuration['locations']['log_dir'] . '/' . 'rosemary-' . $command . '-' . date('d-m-Y-H-i-s') . '.log');
+				if (array_key_exists(1, $_SERVER["argv"])) {
+					$command = $_SERVER["argv"][1];
+					define('LOG_FILE', $this->configuration['locations']['log_dir'] . '/' . 'rosemary-' . $command . '-' . date('d-m-Y-H-i-s') . '.log');
+				} else {
+					define('LOG_FILE', $this->configuration['locations']['log_dir'] . '/' . 'rosemary-' . date('d-m-Y-H-i-s') . '.log');
+				}
 			}
 		}
 	}
