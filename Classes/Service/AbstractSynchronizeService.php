@@ -35,6 +35,7 @@ abstract class AbstractSynchronizeService {
 		$this->task_syncronizeFiles();
 		$this->task_syncronizeDatabaseDump();
 		$this->task_importDatabase();
+		$this->task_executePostSynchronizeCommands();
 	}
 
 	protected abstract function task_syncronizeFiles();
@@ -105,6 +106,26 @@ abstract class AbstractSynchronizeService {
 
 		$this->task_removeMergedDump();
 	}
+
+	protected function task_executePostSynchronizeCommands() {
+		if ($this->installationConfiguration['seed'] !== NULL) {
+			foreach (\Rosemary\Utility\General::getSeeds() as $siteSeed => $seedConfiguration) {
+				if ($siteSeed === $this->installationConfiguration['seed']) {
+					break;
+				}
+			}
+
+			chdir($this->configuration['locations']['document_root'] . '/' . $this->installationConfiguration['name']);
+
+			if (isset($seedConfiguration['post-sync-cmd'])) {
+				foreach ($seedConfiguration['post-sync-cmd'] as $postCreateCommand) {
+					$this->output->writeln('Running post synchronize command: ' . $postCreateCommand);
+					\Rosemary\Utility\General::runCommand($this->output, $postCreateCommand);
+				}
+			}
+		}
+	}
+
 
 
 }

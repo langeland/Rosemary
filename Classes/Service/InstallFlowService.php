@@ -15,7 +15,7 @@ class InstallFlowService extends AbstractInstallService {
 			$this->task_setfilepermissions();
 			$this->task_createVhost();
 			$this->task_installVhostAndRestartApache();
-			$this->task_executePostCreateCommands();
+			$this->task_executePostInstallCommands();
 		} catch (\Exception $e) {
 			die('It all stops here: ' . $e->getMessage());
 		}
@@ -64,7 +64,7 @@ class InstallFlowService extends AbstractInstallService {
 		}
 
 		$this->output->writeln('Creating Configuration/Development/Vagrant/Settings.yaml');
-		$settingsYamlTemplate = new \Rosemary\Service\Template(\Rosemary\Utility\General::getResourcePathAndName('SettingsYaml.template'));
+		$settingsYamlTemplate = new \Rosemary\Service\TemplateService(\Rosemary\Utility\General::getResourcePathAndName('SettingsYaml.template'));
 		$settingsYamlTemplate->setVar('host', $this->configuration['database']['host']);
 		$settingsYamlTemplate->setVar('user', $this->configuration['database']['username']);
 		$settingsYamlTemplate->setVar('password', $this->configuration['database']['password']);
@@ -87,7 +87,7 @@ class InstallFlowService extends AbstractInstallService {
 	}
 
 	private function task_createVhost() {
-		$virtualHostTemplate = new \Rosemary\Service\Template(\Rosemary\Utility\General::getResourcePathAndName('VirtualHostFlow.template'));
+		$virtualHostTemplate = new \Rosemary\Service\TemplateService(\Rosemary\Utility\General::getResourcePathAndName('VirtualHostFlow.template'));
 		$virtualHostTemplate->setVar('installationName', $this->installationConfiguration['name']);
 		$virtualHostTemplate->setVar('documentRoot', $this->configuration['locations']['document_root']);
 		$virtualHostTemplate->setVar('hostname', gethostname());

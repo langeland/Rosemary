@@ -1,0 +1,7 @@
+This script will delete an existing installation. When deleting an enstallation it will delete the following:
+
+  - the database
+  - the virtual host configuration
+  - the directory structure
+
+Whene done there is no way back..

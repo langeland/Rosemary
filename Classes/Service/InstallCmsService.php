@@ -57,7 +57,7 @@ class InstallCmsService extends AbstractInstallService {
 			// Linking typo3 src
 			// Creating typo3temp directory
 
-			$this->task_executePostCreateCommands();
+			$this->task_executePostInstallCommands();
 
 		} catch (\Exception $e) {
 			die('It all stops here: ' . $e->getMessage());
@@ -152,7 +152,7 @@ class InstallCmsService extends AbstractInstallService {
 	}
 
 	private function task_createVhost() {
-		$virtualHostTemplate = new \Rosemary\Service\Template(\Rosemary\Utility\General::getResourcePathAndName('VirtualHostCms.template'));
+		$virtualHostTemplate = new \Rosemary\Service\TemplateService(\Rosemary\Utility\General::getResourcePathAndName('VirtualHostCms.template'));
 		$virtualHostTemplate->setVar('installationName', $this->installationConfiguration['name']);
 		$virtualHostTemplate->setVar('documentRoot', $this->configuration['locations']['document_root']);
 		$virtualHostTemplate->setVar('hostname', gethostname());

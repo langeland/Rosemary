@@ -14,7 +14,7 @@ class DeleteCommand extends \Rosemary\Command\AbstractCommand {
 		$this
 			->setName('delete')
 			->setDescription('Delete an existing project')
-			->addArgument('name', \Symfony\Component\Console\Input\InputArgument::OPTIONAL, 'Set the name of the installation');
+			->addArgument('name', \Symfony\Component\Console\Input\InputArgument::OPTIONAL, 'Name og the installation to delete');
 	}
 
 	protected function execute(\Symfony\Component\Console\Input\InputInterface $input, \Symfony\Component\Console\Output\OutputInterface $output) {

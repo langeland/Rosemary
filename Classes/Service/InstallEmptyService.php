@@ -19,7 +19,7 @@ class InstallEmptyService extends AbstractInstallService {
 	}
 
 	private function task_createVhost() {
-		$virtualHostTemplate = new \Rosemary\Service\Template(\Rosemary\Utility\General::getResourcePathAndName('VirtualHostEmpty.template'));
+		$virtualHostTemplate = new \Rosemary\Service\TemplateService(\Rosemary\Utility\General::getResourcePathAndName('VirtualHostEmpty.template'));
 		$virtualHostTemplate->setVar('installationName', $this->installationConfiguration['name']);
 		$virtualHostTemplate->setVar('documentRoot', $this->configuration['locations']['document_root']);
 		$virtualHostTemplate->setVar('htdocs', 'docs');
