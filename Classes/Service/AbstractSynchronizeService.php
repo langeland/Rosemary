@@ -108,22 +108,26 @@ abstract class AbstractSynchronizeService {
 	}
 
 	protected function task_executePostSynchronizeCommands() {
-		if ($this->installationConfiguration['seed'] !== NULL) {
-			foreach (\Rosemary\Utility\General::getSeeds() as $siteSeed => $seedConfiguration) {
-				if ($siteSeed === $this->installationConfiguration['seed']) {
-					break;
+
+			chdir($this->configuration['locations']['document_root'] . '/' . $this->installationName);
+
+			if (isset($this->seed['post-sync-cmd'])) {
+				foreach ($this->seed['post-sync-cmd'] as $postSynchronizeCommand) {
+					$postSynchronizeCommandTemplate = new \Rosemary\Service\TemplateService($postSynchronizeCommand);
+
+					$postSynchronizeCommandTemplate->setVar('installationName', $this->installationName);
+					$postSynchronizeCommandTemplate->setVar('seedConfiguration', json_encode($this->seed));
+
+					$finalPostSynchronizeCommand = $postSynchronizeCommandTemplate->render();
+
+					try {
+						$this->output->writeln('Running post synchronize command: ' . $finalPostSynchronizeCommand);
+						\Rosemary\Utility\General::runCommand($this->output, $finalPostSynchronizeCommand);
+					} catch (Exception $e) {
+						$this->output->writeln('FAIELD: Post synchronize command: ' . $finalPostSynchronizeCommand);
+					}
 				}
 			}
-
-			chdir($this->configuration['locations']['document_root'] . '/' . $this->installationConfiguration['name']);
-
-			if (isset($seedConfiguration['post-sync-cmd'])) {
-				foreach ($seedConfiguration['post-sync-cmd'] as $postCreateCommand) {
-					$this->output->writeln('Running post synchronize command: ' . $postCreateCommand);
-					\Rosemary\Utility\General::runCommand($this->output, $postCreateCommand);
-				}
-			}
-		}
 	}
 
 

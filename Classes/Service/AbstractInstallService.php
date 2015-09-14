@@ -85,19 +85,18 @@ abstract class AbstractInstallService {
 
 			if (isset($seedConfiguration['post-install-cmd'])) {
 				foreach ($seedConfiguration['post-install-cmd'] as $postInstallCommand) {
-
-
 					$postInstallCommandTemplate = new \Rosemary\Service\TemplateService($postInstallCommand);
 
 					$postInstallCommandTemplate->setVar('installationName', $this->installationConfiguration['name']);
-					$postInstallCommandTemplate->setVar('seedName', $this->installationConfiguration['seed']);
 					$postInstallCommandTemplate->setVar('seedConfiguration', json_encode($seedConfiguration));
 
 					$finalPostInstallCommand = $postInstallCommandTemplate->render();
-
-
-					$this->output->writeln('Running post install command: ' . $finalPostInstallCommand);
-					\Rosemary\Utility\General::runCommand($this->output, $finalPostInstallCommand);
+					try {
+						$this->output->writeln('Running post install command: ' . $finalPostInstallCommand);
+						\Rosemary\Utility\General::runCommand($this->output, $finalPostInstallCommand);
+					} catch (\Exception $e) {
+						$this->output->writeln('FAIELD: Post install command: ' . $finalPostInstallCommand);
+					}
 				}
 			}
 		}
