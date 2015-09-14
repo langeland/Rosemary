@@ -2,7 +2,7 @@
 
 namespace Rosemary\Service;
 
-class Template {
+class TemplateService {
 
 	private $template;
 
@@ -16,7 +16,7 @@ class Template {
 		if (file_exists($templatePathAndName)) {
 			$this->template = file_get_contents($templatePathAndName);
 		} else {
-			throw new \Exception('Template not found... ' . $templatePathAndName);
+			$this->template = $templatePathAndName;
 		}
 	}
 

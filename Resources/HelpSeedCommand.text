@@ -1,0 +1,8 @@
+This command is used for managing seeds. Listing and updating.
+
+<comment>Examples:</comment>
+List existing seeds
+<info>rosemary seed list</info>
+
+Update seed list from server
+<info>rosemary seed update</info>

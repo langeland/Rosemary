@@ -1,0 +1,11 @@
+Synchronize data from MOC Files.
+
+Run this command to update data on your local development version with live-data.
+
+The command takes two arguments, the first is the sitename on your local machine. This is the foldername under /home/sites/SITENAME. The seconda, is an seed of a site. See all available seeds with <info>rosemary list seed</info> command.
+
+<comment>Examples:</comment>
+
+From moc-files
+<info>rosemary sync seed [sitename]</info>
+

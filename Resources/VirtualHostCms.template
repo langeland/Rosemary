@@ -1,10 +1,15 @@
 <VirtualHost *:8081>
 	ServerName {installationName}.dev
+	ServerAlias = {installationName}.{hostname}.dev
+	ServerAlias = *.{installationName}.{hostname}.dev
+	ServerAlias = *.{installationName}.dev
+
+	###USER_STUFF###
 
 	## Vhost docroot
-	DocumentRoot "{documentRoot}/{installationName}/{flowDir}/Web"
+	DocumentRoot "{documentRoot}/{installationName}/docs"
 
-	<Directory "{documentRoot}/{installationName}/{flowDir}/Web">
+	<Directory "{documentRoot}/{installationName}/docs">
 		AllowOverride All
 		Order allow,deny
 		Allow from all

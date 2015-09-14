@@ -1,0 +1,19 @@
+<info>   ______
+  (_____ \
+   _____) )___   ___ _____ ____  _____  ____ _   _
+  |  __  // _ \ /___) ___ |    \(____ |/ ___) | | |
+  | |  \ \ |_| |___ | ____| | | / ___ | |   | |_| |
+  |_|   |_\___/(___/|_____)_|_|_\_____|_|    \__  |
+                                            (____/</info>
+
+"According to legend, it was draped around the Greek goddess Aphrodite when she rose from the sea, born of Uranus's semen. The Virgin Mary is said to have spread her blue cloak over a white-blossomed rosemary bush when she was resting, and the flowers turned blue. The shrub then became known as the "Rose of Mary"."
+
+This script should NOT be run as root, but as vagrant
+
+<comment>Available commands:</comment>
+  <info>delete</info>   Delete an existing project
+  <info>help</info>     Displays help for a command
+  <info>install</info>  Install an existing or create blank project
+  <info>seed</info>     Seed handling
+  <info>sync</info>     Synchronize data from moc-files to local project
+
