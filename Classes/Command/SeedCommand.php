@@ -70,7 +70,7 @@ class SeedCommand extends \Rosemary\Command\AbstractCommand {
 			}
 		}
 
-		$source = 'rsync@moc-files:/volume1/developer/Seeds2.yaml';
+		$source = 'rsync@moc-files.moc.net:/volume1/developer/Seeds2.yaml';
 		$destination = $_SERVER['HOME'] . '/.rosemary/Seeds2.yaml';
 		$cmd = sprintf('scp %s %s', $source, $destination);
 		$this->output->writeln($cmd);
