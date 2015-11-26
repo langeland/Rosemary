@@ -41,21 +41,31 @@ class SeedCommand extends \Rosemary\Command\AbstractCommand {
 	private function listAction() {
 		$this->output->writeln('Available seeds');
 		$table = new \Symfony\Component\Console\Helper\Table($this->output);
-		$table->setHeaders(array('Name', 'Description', 'Type'));
+		$table->setHeaders(array('Name', 'Description', 'Type', 'Sync'));
 		$seeds = General::getSeeds();
 		ksort($seeds);
 		foreach ($seeds as $seed => $seedConfiguration) {
-			if ($seedConfiguration['type'] == 'cms') {
+			if (array_key_exists('type', $seedConfiguration) && $seedConfiguration['type'] == 'cms') {
 				$typeField = 'CMS';
 				if ($seedConfiguration['version']) {
 					$typeField .= ' (' . $seedConfiguration['version'] . ')';
 				}
-			} elseif ($seedConfiguration['type'] == 'flow') {
+			} elseif (array_key_exists('type', $seedConfiguration) && $seedConfiguration['type'] == 'flow') {
 				$typeField = 'Flow/NEOS';
 			} else {
 				$typeField = 'N/A';
 			}
-			$table->addRow(array($seed, $seedConfiguration['description'], $typeField));
+
+			if(array_key_exists('datasource', $seedConfiguration) && $seedConfiguration['datasource'] != ''){
+				$syncField = '[ X ]';
+//				$latsSync = filemtime ('ssh2.sftp://' . $seedConfiguration['datasource'] . 'sync-end.txt' );
+//				echo $latsSync;
+			} else {
+				$syncField = '[   ]';
+				$latsSync = '';
+			}
+
+			$table->addRow(array($seed, $seedConfiguration['description'], $typeField, $syncField));
 		}
 		$table->render();
 	}
