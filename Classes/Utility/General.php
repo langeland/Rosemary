@@ -29,7 +29,7 @@ class General {
 	public static function getSeeds() {
 		$seedFile = $_SERVER['HOME'] . '/.rosemary/Seeds2.yaml';
 		if (file_exists($seedFile) === FALSE) {
-			throw new \Exception('Seed file ' . $seedFile . ' not found. ' . PHP_EOL . ' Run rosemary update-seeds first' . PHP_EOL);
+			throw new \Exception('Seed file ' . $seedFile . ' not found. ' . PHP_EOL . ' Run rosemary seed update first' . PHP_EOL);
 		}
 
 		try {
