@@ -45,13 +45,16 @@ class SeedCommand extends \Rosemary\Command\AbstractCommand {
 		$seeds = General::getSeeds();
 		ksort($seeds);
 		foreach ($seeds as $seed => $seedConfiguration) {
-			if ($seedConfiguration['type'] == 'cms') {
-				$typeField = 'CMS';
-				if ($seedConfiguration['version']) {
-					$typeField .= ' (' . $seedConfiguration['version'] . ')';
+
+			if (isset($seedConfiguration['type'])) {
+				if ($seedConfiguration['type'] == 'cms') {
+					$typeField = 'CMS';
+					if ($seedConfiguration['version']) {
+						$typeField .= ' (' . $seedConfiguration['version'] . ')';
+					}
+				} elseif ($seedConfiguration['type'] == 'flow') {
+					$typeField = 'Flow/NEOS';
 				}
-			} elseif ($seedConfiguration['type'] == 'flow') {
-				$typeField = 'Flow/NEOS';
 			} else {
 				$typeField = 'N/A';
 			}
