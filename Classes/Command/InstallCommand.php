@@ -25,6 +25,7 @@ class InstallCommand extends \Rosemary\Command\AbstractCommand {
 		parent::configure();
 		$this
 			->setName('install')
+			->setAliases(array('create'))
 			->setDescription('Create blank project')
 			->addArgument('source', \Symfony\Component\Console\Input\InputArgument::REQUIRED, 'Set the source of the installation. Can be a site seed, a packagist package "vendor/package" or a git reposirory "git@github.com:user/vendor-package.git"')
 			->addArgument('name', \Symfony\Component\Console\Input\InputArgument::OPTIONAL, 'Set the name of the installation. If no name is given, then the seed is used')

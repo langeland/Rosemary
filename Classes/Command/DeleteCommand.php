@@ -13,6 +13,7 @@ class DeleteCommand extends \Rosemary\Command\AbstractCommand {
 		parent::configure();
 		$this
 			->setName('delete')
+			->setAliases(array('uninstall', 'remove', 'rm'))
 			->setDescription('Delete an existing project')
 			->addArgument('name', \Symfony\Component\Console\Input\InputArgument::OPTIONAL, 'Name og the installation to delete');
 	}
