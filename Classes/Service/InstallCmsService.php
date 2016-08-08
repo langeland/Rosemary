@@ -165,7 +165,7 @@ class InstallCmsService extends AbstractInstallService {
 			'sudo mv %s %s',
 			array(
 				$file,
-				$this->configuration['locations']['apache_sites'] . '/' . $this->installationConfiguration['name'],
+				$this->configuration['locations']['apache_sites'] . '/' . $this->installationConfiguration['name'] . '.conf',
 			)
 		);
 
