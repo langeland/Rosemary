@@ -11,9 +11,11 @@
 
 	<Directory "{documentRoot}/{installationName}/docs">
 		AllowOverride All
-		Order allow,deny
-		Allow from all
+		Require all granted
 	</Directory>
+
+	ProxyPassMatch ^/(.*\.php(/.*)?)$ unix:/var/run/php/php5-fpm-vagrant.sock|fcgi://127.0.0.1:9000{documentRoot}/{installationName}/docs
+	# ProxyPassMatch ^/(.*\.php(/.*)?)$ unix:/var/run/php/php70-fpm-vagrant.sock|fcgi://127.0.0.1:9000{documentRoot}/{installationName}/docs
 
 	## Logging
 	ErrorLog "{documentRoot}/{installationName}/logs/error.log"
